@@ -6,9 +6,10 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "../ui/resizable";
-import { Command, CommandGroup } from "../ui/command";
-import { realfagsByggetFloors } from "@/lib/dummData";
-import InspectionTable from "../tables/inspectionTable";
+import { Command, CommandGroup, CommandItem } from "../ui/command";
+import { area, realfagsByggetFloors } from "@/lib/dummData";
+import { MazeMapWrapper } from "../maps/mazeMapWrapper";
+import { DashboardTable } from "./dashboardTable";
 
 export interface SelectedFloor {
   name: string;
@@ -46,58 +47,57 @@ export const Dashboard = () => {
         className="rounded-lg border h-full"
       >
         <ResizablePanel defaultSize={15}>
-          <div className="border shadow-md flex-grow">
-            <h3 className="text-slate-500 font-semibold text-medium pl-2">
-              Etasjer
-            </h3>
-            {allFloors.map((floor) => (
-              <div
-                onClick={() => setSelectedFloor(floor)}
-                className="font-bold text-xl hover:bg-gray-200 pl-4 cursor-pointer"
-                style={{
-                  background:
-                    selectedFloor.name === floor.name ? "#D3D3D3" : "",
-                }}
-                key={floor.name}
-              >
-                Etasje {floor.name}
-              </div>
-            ))}
-          </div>
+          <Command className="border shadow-md flex-grow">
+            <CommandGroup heading="Etasjer" className="h-full flex-grow">
+              {allFloors.map((floor) => (
+                <CommandItem
+                  // onClick={() => console.log(floor)}
+                  onSelect={() => setSelectedFloor(floor)}
+                  className="font-bold text-xl hover:bg-gray-200 pl-4 cursor-pointer"
+                  style={{
+                    background:
+                      selectedFloor?.name === floor.name ? "#D3D3D3" : "",
+                  }}
+                  key={floor.name}
+                >
+                  Etasje {floor.name}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </Command>
         </ResizablePanel>
         <ResizableHandle withHandle />
         <ResizablePanel defaultSize={15}>
           <Command className="border shadow-md flex-grow">
             <CommandGroup heading="Områder" className="h-full flex-grow">
-              {/* {area[selectedFloor.name].map((area) => (
+              {area[selectedFloor.name].map((area) => (
                 <CommandItem
-                  onSelect={() => console.log("floor clicked ")}
+                  // onClick={() => console.log(floor)}
+                  onSelect={() => setSelectedArea(area)}
+                  className="font-bold text-xl hover:bg-gray-200 pl-4 cursor-pointer"
                   style={{
-                    background:
-                      selectedArea && selectedArea.id === area.id
-                        ? "#D3D3D3"
-                        : "",
+                    background: selectedArea?.id === area.id ? "#D3D3D3" : "",
                   }}
                   key={area.id}
                 >
-                  <span className="font-bold text-xl">Område {area.name}</span>
+                  Område {area.name}
                 </CommandItem>
-              ))} */}
+              ))}
             </CommandGroup>
           </Command>
         </ResizablePanel>
         <ResizableHandle withHandle />
         <ResizablePanel defaultSize={70} className="grid grid-cols-2 gap-2">
-          <InspectionTable />
-          {/* <MazeMapWrapper
+          <DashboardTable />
+          <MazeMapWrapper
             className="w-[500px] h-[500px]"
             allFloors={realfagsByggetFloors}
-            zLevel={realfagsByggetFloors[0].properties.z}
+            zLevel={selectedFloor.zLevel}
             setLoading={setLoading}
             showFloorLayer
-            zoom={17}
+            zoom={16}
             center={{ lat: 63.41559, lng: 10.4058 }}
-          /> */}
+          />
         </ResizablePanel>
       </ResizablePanelGroup>
     </div>

@@ -10,7 +10,6 @@ import { useContext } from "react";
 import { AuthContext } from "@/context/authContext";
 import navigation from "@/lib/navigation";
 import { Button } from "../ui/button";
-import ProfileAvatar from "./profileAvatar";
 import { DroneLogo } from "../logo/droneLogo";
 import { signInWithPopupCustom, signOut } from "@/lib/firebase/auth";
 import {

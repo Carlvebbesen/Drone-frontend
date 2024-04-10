@@ -24,6 +24,7 @@ export const AuthContextProvider = ({
     const unsubscribe = onAuthStateChanged(authInstance, (user) => {
       setUser(user);
     });
+    console.count("auth changes");
     return () => unsubscribe();
   }, []);
 
