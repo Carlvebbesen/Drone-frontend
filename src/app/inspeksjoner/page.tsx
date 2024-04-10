@@ -1,6 +1,6 @@
 "use client";
 
-import { InspectionMap } from "@/components/maps/inspectionMap";
+import { InspectionMap } from "@/components/maps/mazeMapWrapper";
 import InspectionTable from "@/components/tables/inspectionTable";
 
 const Inspections = () => {

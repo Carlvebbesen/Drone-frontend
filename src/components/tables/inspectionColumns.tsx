@@ -1,6 +1,13 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { TelloDrone } from "../logo/telloDrone";
-import { format } from "date-fns";
+import {
+  differenceInCalendarMonths,
+  format,
+  getMonth,
+  getWeek,
+  isToday,
+  isYesterday,
+} from "date-fns";
 
 // This type is used to define the shape of our data.
 // You can use a Zod schema here if you want.
@@ -14,7 +21,21 @@ export type InspectionColumns = {
   elapsedTime: string;
   droneId: string;
 };
-
+const getDay = (date: Date) => {
+  if (isToday(date)) {
+    return `Idag kl: ${format(date, "k:m")}`;
+  }
+  if (isYesterday(date)) {
+    return `Igår kl: ${format(date, "k:m")}`;
+  }
+  if (getWeek(date) - 1 === getWeek(new Date())) {
+    return "forrige uke";
+  }
+  if (getMonth(date) - 1 === getMonth(new Date())) {
+    return "forrige måned";
+  }
+  return `${differenceInCalendarMonths(new Date(), date)} måneder siden`;
+};
 const getColor = (state: string) => {
   if (state === "error") return "red";
   if (state === "onGoing") return "gray";
@@ -23,23 +44,25 @@ const getColor = (state: string) => {
 };
 
 export const columns: ColumnDef<InspectionColumns>[] = [
+  // {
+  //   accessorKey: "name",
+  //   header: "InspeksjonsNavn",
+  //   cell: ({ row }) => {
+  //     return <div>{`#${row.getValue("name")} Inspeksjon`}</div>;
+  //   },
+  // },
   {
-    accessorKey: "name",
-    header: "InspeksjonsNavn",
+    accessorKey: "time",
+    header: "Tid",
     cell: ({ row }) => {
-      return <div>{`#${row.getValue("name")} Inspeksjon`}</div>;
+      return <div className="text-nowrap">{getDay(row.getValue("time"))}</div>;
     },
   },
   {
     accessorKey: "droneId",
-    header: "Dronen",
+    header: "Robot",
     cell: ({ row }) => {
-      return (
-        <div>
-          <p>{row.getValue("droneId")}</p>
-          <TelloDrone size={40} />
-        </div>
-      );
+      return <TelloDrone size={40} />;
     },
   },
   {
@@ -54,29 +77,7 @@ export const columns: ColumnDef<InspectionColumns>[] = [
       );
     },
   },
-  // {
-  //   accessorKey: "launchType",
-  //   header: "Trigger",
-  //   cell: ({ row }) => {
-  //     return <div>{row.getValue("launchType")}</div>;
-  //   },
-  // },
-  {
-    accessorKey: "time",
-    header: "StartTid",
-    cell: ({ row }) => {
-      return (
-        <div>{format(new Date(row.getValue("time")), "EE/MM/yy k:m")}</div>
-      );
-    },
-  },
-  // {
-  //   accessorKey: "elapsedTime",
-  //   header: "Varighet",
-  //   cell: ({ row }) => {
-  //     return <div>{row.getValue("elapsedTime")}</div>;
-  //   },
-  // },
+
   {
     accessorKey: "detensionCount",
     header: "Avvik",

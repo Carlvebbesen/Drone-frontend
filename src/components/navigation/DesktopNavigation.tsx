@@ -12,11 +12,18 @@ import navigation from "@/lib/navigation";
 import { Button } from "../ui/button";
 import ProfileAvatar from "./profileAvatar";
 import { DroneLogo } from "../logo/droneLogo";
-import { signInWithPopupCustom } from "@/lib/firebase/auth";
+import { signInWithPopupCustom, signOut } from "@/lib/firebase/auth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
 
 const DesktopNavigation = () => {
   const pathname = usePathname();
-  const { isSignedIn } = useContext(AuthContext);
+  const { isSignedIn, user } = useContext(AuthContext);
   return (
     <NavigationMenu className="mt-3  px-6 min-w-full h-20 flex justify-between">
       <div className="flex items-center justify-start">
@@ -41,18 +48,33 @@ const DesktopNavigation = () => {
             );
           })}
           <div className="flex items-center justify-center">
-            {isSignedIn && (
-              <div className="flex items-center justify-center">
-                <NavigationMenuItem className="mr-6">
-                  <ProfileAvatar />
-                </NavigationMenuItem>
-              </div>
-            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger>
+                {user && (
+                  <p className="text-start w-full">
+                    Velkommen tilbake, {user.displayName} !
+                  </p>
+                )}
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem
+                  onClick={async () => {
+                    await signOut();
+                  }}
+                >
+                  Logg ut
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </NavigationMenuList>
       ) : (
         <NavigationMenuItem key={"loginLink"}>
-          <Button onClick={()=>signInWithPopupCustom()} variant={"outline"}>{"LogIn"}</Button>
+          <Button onClick={() => signInWithPopupCustom()} variant={"outline"}>
+            {"LogIn"}
+          </Button>
         </NavigationMenuItem>
       )}
     </NavigationMenu>

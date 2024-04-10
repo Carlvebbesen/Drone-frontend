@@ -56,7 +56,7 @@
     "react-day-picker": "^8.10.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.50.1",
-    "react-resizable-panels": "^2.0.9",
+    "react-resizable-panels": "^2.0.16",
     "react-script-hook": "^1.7.2",
     "socket.io": "^4.7.4",
     "socket.io-client": "^4.7.4",
