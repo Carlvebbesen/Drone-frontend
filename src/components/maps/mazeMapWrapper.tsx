@@ -9,7 +9,7 @@ import React, {
 } from "react";
 import useScript from "react-script-hook";
 import { MazemapPos, BlueDot, RouteProps, PoiProps, LngLat } from "./mapUtils";
-import { FloorObject } from "@/lib/dummData";
+import { ConvertedFormatTrippel, revertToTrippelNestedList } from "@/lib/utils";
 
 declare global {
   let Mazemap: any;
@@ -32,13 +32,22 @@ interface MapWrapperProps {
   showDrones?: boolean;
   routePoints?: { pos: MazemapPos }[];
   setRoutePoints?: Dispatch<SetStateAction<{ pos: MazemapPos }[]>>;
-  allFloors: FloorObject[];
+  allFloors: {
+    name: string;
+    zLevel: number;
+    id: number;
+    geometry: {
+      type: string;
+      coordinates: ConvertedFormatTrippel["coordinates"];
+    };
+  }[];
   zLevel: number;
   showDots?: boolean;
   className?: string;
-  setLoading: Dispatch<SetStateAction<boolean>>;
+  setLoading?: Dispatch<SetStateAction<boolean>>;
   dronePositions?: { pos: MazemapPos; id: string }[];
   displayInspection?: boolean;
+  setRoomsClicked?: Dispatch<SetStateAction<PoiProps[]>>;
 }
 
 export const MazeMapWrapper = ({
@@ -52,6 +61,7 @@ export const MazeMapWrapper = ({
   destroyOldDots = false,
   displayInspection = false,
   setRoutePoints,
+  setRoomsClicked,
   showDrones = false,
   allFloors,
   zLevel,
@@ -177,22 +187,23 @@ export const MazeMapWrapper = ({
   };
 
   const generateRoute = async (pos: MazemapPos, room: PoiProps) => {
-    const closestDrone = await findClosestDrone(pos);
-    createDot(
-      closestDrone.drone.pos.lngLat,
-      closestDrone.drone.pos.zLevel,
-      false
-    );
-    // room.geometry.coordinates[0].forEach((item) => {
-    //   createDot({ lng: item[0], lat: item[1] }, 1, true);
-    // });
-    newPath(closestDrone);
-    onRoute &&
+    if (onRoute) {
+      const closestDrone = await findClosestDrone(pos);
+      createDot(
+        closestDrone.drone.pos.lngLat,
+        closestDrone.drone.pos.zLevel,
+        false
+      );
+      // room.geometry.coordinates[0].forEach((item) => {
+      //   createDot({ lng: item[0], lat: item[1] }, 1, true);
+      // });
+      newPath(closestDrone);
       onRoute({
         route: closestDrone.route,
         roomDimension: room,
         drone: closestDrone.drone,
       });
+    }
   };
   const updateClickedPos = async (
     lngLat: MazemapPos["lngLat"],
@@ -243,14 +254,23 @@ export const MazeMapWrapper = ({
       myMapRef.current.getSource("custom-floor-fill").setData({
         type: "FeatureCollection",
         features: allFloors
-          .filter((item) => item.properties.z === zLevel)
+          .filter((item) => item.zLevel === zLevel)
           .map((floor) => {
             return {
               type: "Feature",
-              properties: { zLevel: floor.properties.z, name: "Floor Fill" },
+              properties: {
+                buildingId: 67,
+                campusId: 1,
+                flags: [],
+                z: floor.zLevel,
+                name: "Floor Fill",
+                id: floor.id,
+              },
               geometry: {
                 type: "Polygon",
-                coordinates: floor.geometry.coordinates,
+                coordinates: revertToTrippelNestedList(
+                  floor.geometry.coordinates
+                ).coordinates,
               },
             };
           }),
@@ -259,7 +279,7 @@ export const MazeMapWrapper = ({
   };
 
   const onMapClick = async (e: any) => {
-    setLoading(true);
+    setLoading && setLoading(true);
     let zLevel = myMapRef.current.zLevel;
     showDots && updateClickedPos(e.lngLat, zLevel);
     if (showDots) {
@@ -267,10 +287,13 @@ export const MazeMapWrapper = ({
         lngLat: e.lngLat,
         zLevel: zLevel,
       });
+
       generateRoute(e.lngLat, room);
+      setRoomsClicked && setRoomsClicked((prev) => [...prev, room]);
     }
-    setLoading(false);
+    setLoading && setLoading(false);
   };
+
   const onLoad = async (): Promise<void> => {
     //initialize the highlighter
 

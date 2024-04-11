@@ -16,6 +16,10 @@ const navigation: Navigation[] = [
     href: "/debug",
     label: "Debug",
   },
+  {
+    href: "/generateContent",
+    label: "Lag Data",
+  },
 ];
 
 export default navigation;

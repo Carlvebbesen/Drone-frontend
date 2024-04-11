@@ -3,7 +3,7 @@ import { VideoStream } from "@/components/video/videoStream";
 
 const Debug = () => {
   return (
-    <div>
+    <div className="flex flex-col gap-10">
       <VideoStream />
       <ManualControl />
     </div>
