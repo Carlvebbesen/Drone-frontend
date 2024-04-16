@@ -18,16 +18,6 @@ export interface ConvertedFormatDobbel {
   coordinates: { [index: number]: number[] };
 }
 
-export function convertFromDoubleNestedListToObject(
-  data: number[][]
-): ConvertedFormatDobbel {
-  const coordinates: ConvertedFormatDobbel["coordinates"] = {};
-  data.forEach((location, index) => {
-    coordinates[index] = location;
-  });
-  return { coordinates };
-}
-
 export function convertFromTrippleNestedListToObject(
   data: number[][][]
 ): ConvertedFormatTrippel {
@@ -58,20 +48,6 @@ export function revertToTrippelNestedList(
     });
 
     revertedCoordinates.push(section);
-  });
-
-  return { coordinates: revertedCoordinates };
-}
-export function revertToDobbelNestedList(
-  data: ConvertedFormatDobbel["coordinates"]
-): {
-  coordinates: number[][];
-} {
-  const revertedCoordinates: number[][] = [];
-
-  Object.keys(data).forEach((key) => {
-    const index = parseInt(key);
-    revertedCoordinates.push(data[index]);
   });
 
   return { coordinates: revertedCoordinates };

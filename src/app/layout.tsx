@@ -15,8 +15,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body>
+    <html lang="en" className="m-0 p-0">
+      <body className="h-full m-0 p-0">
         <AuthContextProvider>
           <DesktopNavigation />
           <main className="p-6 flex justify-center">{children}</main>

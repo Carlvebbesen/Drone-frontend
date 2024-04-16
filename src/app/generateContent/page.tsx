@@ -1,5 +1,5 @@
 import { AddDataView } from "@/components/addDataView";
-import { getBuilding } from "@/lib/firebase/readData";
+import { getBuilding, getDrones } from "@/lib/firebase/readData";
 
 const Page = async () => {
   const buildingName = "Realfagsbygget";

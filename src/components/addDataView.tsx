@@ -1,33 +1,51 @@
 "use client";
 
-import { createBuilding, createBuildingArea } from "@/lib/firebase/createData";
+import {
+  Drone,
+  createBuilding,
+  createBuildingArea,
+  createDrone,
+  createInspectionSeries,
+} from "@/lib/firebase/createData";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { useMutationWithToast } from "@/hooks/useMutationWithToast";
 import { ReloadIcon } from "@radix-ui/react-icons";
-import { SelectedArea, SelectedFloor } from "./dashboard/dashboard";
-import { useState } from "react";
-import { PoiProps } from "./maps/mapUtils";
+import { SelectedFloor } from "./dashboard/dashboard";
+import { useEffect, useState } from "react";
+import { MazemapPos, PoiProps } from "./maps/mapUtils";
 import { ResizablePanel, ResizablePanelGroup } from "./ui/resizable";
 import { DashboardMenu } from "./dashboard/menu";
-import { Building } from "@/lib/firebase/readData";
+import { Building, getDrones } from "@/lib/firebase/readData";
 import { Input } from "./ui/input";
 import { MazeMapWrapper } from "./maps/mazeMapWrapper";
 import { Label } from "@radix-ui/react-dropdown-menu";
+import { BuildingAreaFirebase } from "@/lib/dataTypes";
+import { Separator } from "./ui/separator";
 
 export const AddDataView = ({ building }: { building: Building }) => {
   const { mutateWithToast, loading } = useMutationWithToast();
+  const [drones, setDrones] = useState<Drone[]>([]);
   const [selectedFloor, setSelectedFloor] = useState<SelectedFloor>({
-    name: "1",
+    name: "3",
     zLevel: 3,
-    id: 300,
+    id: 383,
   });
-  const [selectedArea, setSelectedArea] = useState<SelectedArea | undefined>(
-    undefined
-  );
+  useEffect(() => {
+    async function fetchData() {
+      const drones = await getDrones();
+      setDrones(drones);
+    }
+    fetchData();
+  }, []);
+
+  const [selectedArea, setSelectedArea] = useState<
+    BuildingAreaFirebase | undefined
+  >(undefined);
+  const [lastPoint, setLastPoint] = useState<MazemapPos | undefined>(undefined);
   const [roomsClicked, setRoomsClicked] = useState<PoiProps[]>([]);
   const [navn, setNavn] = useState<string>("");
-
+  const [count, setCount] = useState<number | undefined>();
   return (
     <div className="flex flex-grow justify-center items-center flex-col w-full px-10">
       <h1>{building.name}</h1>
@@ -44,32 +62,33 @@ export const AddDataView = ({ building }: { building: Building }) => {
           setSelectedArea={setSelectedArea}
         />
         <ResizablePanel defaultSize={70} className="grid grid-cols-2 gap-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Oppdater Data</CardTitle>
-              <CardContent className="grid grid-cols-10">
-                <div className="col-span-9 flex flex-col gap-6">
-                  <Button
-                    onClick={async () => {
-                      mutateWithToast({
-                        mutatePromise: createBuilding(),
-                        textObj: {
-                          actionType: "create",
-                          singularForm: "bygning",
-                          pluralForm: "bygningen",
-                        },
-                      });
-                    }}
-                  >
-                    Lag Realfagsbygget
-                  </Button>
-                  <div className="flex flex-col gap-2">
-                    <Label>Navn på Område</Label>
+          <Card className="p-2">
+            <CardTitle className="py-5">Oppdater Data</CardTitle>
+            <CardContent className="grid grid-cols-10">
+              <div className="col-span-9 flex flex-col gap-6">
+                <Button
+                  onClick={async () => {
+                    mutateWithToast({
+                      mutatePromise: createBuilding(),
+                      textObj: {
+                        actionType: "create",
+                        singularForm: "bygning",
+                        pluralForm: "bygningen",
+                      },
+                    });
+                  }}
+                >
+                  Lag Realfagsbygget
+                </Button>
+                <Card className="flex flex-col gap-2 p-4">
+                  <CardTitle>Lag et nytt Område</CardTitle>
+                  <CardContent>
                     <Input
+                      placeholder="Navn på området"
                       value={navn}
                       onChange={(e) => setNavn(e.target.value)}
                     />
-                    <div className="flex justify-between">
+                    <div className="flex justify-between p-2">
                       <Button
                         onClick={() => {
                           mutateWithToast({
@@ -92,30 +111,135 @@ export const AddDataView = ({ building }: { building: Building }) => {
                       </Button>
                       <Button
                         onClick={() => {
-                          setRoomsClicked([]);
+                          mutateWithToast({
+                            mutatePromise: new Promise((resolve) =>
+                              setTimeout(() => {
+                                setRoomsClicked([]);
+                                resolve(true);
+                              }, 1000)
+                            ),
+                            textObj: {
+                              actionType: "delete",
+                              pluralForm: "rommene",
+                              singularForm: "rom",
+                            },
+                          });
                         }}
                       >
                         Reset Rooms
                       </Button>
                     </div>
-                  </div>
-                </div>
-                <div>
-                  {loading && (
-                    <ReloadIcon className="mr-2 h-10 w-10 animate-spin" />
-                  )}
-                </div>
-              </CardContent>
-            </CardHeader>
+                  </CardContent>
+                </Card>
+
+                <Card className="flex flex-col gap-2 p-3">
+                  <CardTitle>Lag en ny drone:</CardTitle>
+                  <CardContent className="flex justify-between">
+                    <Button
+                      onClick={() => {
+                        if (lastPoint && selectedArea) {
+                          mutateWithToast({
+                            mutatePromise: createDrone({
+                              id: "hei",
+                              isConnected: false,
+                              lastUsed: new Date(),
+                              connectionId: "TELLO-9C1649",
+                              building: "Realfagsbygget",
+                              batteryPercentage: 80,
+                              temperature: 37,
+                              location: {
+                                zLevel: lastPoint.zLevel,
+                                lngLat: {
+                                  lat: lastPoint.lngLat.lat,
+                                  lng: lastPoint.lngLat.lng,
+                                },
+                              },
+                              buildingArea: selectedArea.name,
+                              buildingAreaId: selectedArea.id,
+                              floorId: selectedArea.floorId,
+                              possibleTasks: [
+                                "escaperoute inspection",
+                                "ceiling inspection",
+                                "room inspection",
+                              ],
+                              robotType: "drone",
+                            }),
+                            textObj: {
+                              actionType: "create",
+                              singularForm: "Drone",
+                              pluralForm: "Dronen",
+                            },
+                          });
+                        }
+                      }}
+                    >
+                      Legg til en drone til området
+                    </Button>
+                  </CardContent>
+                </Card>
+                <Card className="p-4">
+                  <CardTitle className="p-2">
+                    Lag en inspeksjonsserie for området
+                  </CardTitle>
+                  <CardContent className="flex flex-col gap-4">
+                    <Input
+                      value={count}
+                      onChange={(e) => setCount(parseInt(e.target.value))}
+                      placeholder="Antall"
+                      type="number"
+                    />
+                    <Button
+                      onClick={() => {
+                        if (selectedArea && count) {
+                          mutateWithToast({
+                            mutatePromise: createInspectionSeries({
+                              buildingAreaId: selectedArea.id,
+                              floorId: selectedArea.floorId,
+                              droneId:
+                                drones.find(
+                                  (drone) =>
+                                    drone.buildingAreaId === selectedArea.id
+                                )?.id ?? " ",
+                              inspectionType: "escaperoute inspection",
+                              count: count,
+                            }),
+                            textObj: {
+                              actionType: "create",
+                              singularForm: "inspeksjonsserie",
+                              pluralForm: "inspeksjonsserien",
+                            },
+                          });
+                        }
+                      }}
+                    >
+                      Generer serie
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+              <div>
+                {loading && (
+                  <ReloadIcon className="mr-2 h-10 w-10 animate-spin" />
+                )}
+              </div>
+            </CardContent>
           </Card>
           <MazeMapWrapper
-            className="w-[500px] h-[500px]"
+            className="w-[900px] h-[900px]"
             showDots
+            setPointClicked={setLastPoint}
             setRoomsClicked={setRoomsClicked}
-            allFloors={building.floorGeometry}
+            selectedArea={selectedArea}
             zLevel={selectedFloor.zLevel}
-            showFloorLayer
             zoom={16}
+            allDrones={drones.map((item) => {
+              return {
+                pos: item.location,
+                buildingAreaId: item.buildingAreaId,
+                id: item.id,
+              };
+            })}
+            allFloors={building.floorGeometry}
             center={{ lat: 63.41559, lng: 10.4058 }}
           />
         </ResizablePanel>

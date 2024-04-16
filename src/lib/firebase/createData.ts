@@ -3,11 +3,9 @@
 import { Geometry, MazemapPos, PoiPoint } from "@/components/maps/mapUtils";
 import { db } from "./config";
 import { doc, setDoc, addDoc, collection } from "firebase/firestore";
-import {
-  convertFromDoubleNestedListToObject,
-  convertFromTrippleNestedListToObject,
-} from "../utils";
-import { initBuilding, initBuildingFloors } from "../initBuilding";
+import { convertFromTrippleNestedListToObject } from "../utils";
+import { initBuildingFloors } from "../initBuilding";
+import { subDays } from "date-fns";
 
 export const createBuilding = async () => {
   await setDoc(doc(db, "Buildings", "Realfagsbygget"), {
@@ -45,7 +43,7 @@ export const createBuilding = async () => {
   console.log("Created building");
 };
 
-interface Drone {
+export interface Drone {
   isConnected: boolean;
   lastUsed: Date;
   connectionId: string;
@@ -54,9 +52,20 @@ interface Drone {
   temperature: number;
   location: MazemapPos;
   buildingArea: string;
+  buildingAreaId: string;
   possibleTasks: string[];
   robotType: string;
+  floorId: number;
+  id: string;
 }
+export const createDrone = async (data: Drone) => {
+  const docRef = await addDoc(collection(db, "drones"), {
+    ...data,
+    building: doc(db, "buildings", data.building),
+    buildingArea: doc(db, "buildingArea", data.buildingAreaId),
+  }).catch((error) => console.error(error));
+  console.log("created doc");
+};
 interface BuildingArea {
   name: string;
   floorId: number;
@@ -74,17 +83,11 @@ interface BuildingArea {
     geometry: Geometry;
   }[];
 }
-export const createDrone = async (data: Drone) => {
-  const docRef = await addDoc(collection(db, "drones"), {
-    ...data,
-    building: doc(db, "buildings", data.building),
-    buildingArea: doc(db, "buildingArea", data.buildingArea),
-  });
-  console.log("created doc", docRef.id);
-};
 export const createBuildingArea = async (data: BuildingArea) => {
   const docRef = await addDoc(collection(db, "buildingArea"), {
-    ...data,
+    name: data.name,
+    campusId: data.campusId,
+    floorId: data.floorId,
     building: doc(db, "buildings", data.building),
     rooms: data.rooms.map((room) => {
       return {
@@ -94,12 +97,78 @@ export const createBuildingArea = async (data: BuildingArea) => {
         },
         geometry: {
           type: room.geometry.type,
-          coordinates: convertFromDoubleNestedListToObject(
+          coordinates: convertFromTrippleNestedListToObject(
             room.geometry.coordinates
           ).coordinates,
         },
       };
     }),
-  });
-  console.log("created doc", docRef.id);
+  }).catch((error) => console.error(error));
+  console.log("created doc buildingarea!!");
+};
+export interface Inspection {
+  id: string;
+  floorId: number;
+  buildingAreaId: string;
+  droneId: string;
+  date: Date;
+  status: "Success" | "onGoing" | "error";
+  errorMsg: string;
+  statusMsg: string;
+  inspectionType:
+    | "escaperoute inspection"
+    | "ceiling inspection"
+    | "room inspection"
+    | "dust inspection";
+}
+export interface InspectionFirebase extends Inspection {
+  detensionCount: number;
+}
+export const createSingleInspection = async (data: Inspection) => {
+  const docRef = await addDoc(collection(db, "inspection"), {
+    floorId: data.floorId,
+    buildingAreaId: doc(db, "buildingArea", data.buildingAreaId),
+    droneId: doc(db, "drones", data.droneId),
+    date: data.date,
+    status: data.status,
+    errorMsg: data.errorMsg,
+    statusMsg: data.statusMsg,
+    inspectionType: data.inspectionType,
+  }).catch((error) => console.error(error));
+  console.log("created inspection!!");
+};
+
+export const createInspectionSeries = async ({
+  floorId,
+  buildingAreaId,
+  droneId,
+  inspectionType,
+  count,
+}: {
+  floorId: number;
+  buildingAreaId: string;
+  droneId: string;
+  count: number;
+  inspectionType:
+    | "escaperoute inspection"
+    | "ceiling inspection"
+    | "room inspection"
+    | "dust inspection";
+}) => {
+  let counter = 0;
+  while (counter < count) {
+    const random = parseInt((Math.random() * 30).toFixed());
+    await createSingleInspection({
+      buildingAreaId: buildingAreaId,
+      floorId: floorId,
+      droneId: droneId,
+      inspectionType: inspectionType,
+      errorMsg: "",
+      status: "Success",
+      statusMsg: "Vellykket inspeksjon utført, ingen avvik funnet",
+      id: "test",
+      date: subDays(new Date().setHours(4), random),
+    });
+    counter++;
+  }
 };

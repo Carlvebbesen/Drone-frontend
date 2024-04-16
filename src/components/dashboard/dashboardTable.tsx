@@ -17,10 +17,18 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
-import { inspections } from "@/lib/dummData";
 import { TelloDrone } from "../logo/telloDrone";
+import { InspectionFirebase } from "@/lib/firebase/createData";
+import { useCallback, useEffect, useState } from "react";
+import { getInspections } from "@/lib/firebase/readData";
 
-export const DashboardTable = () => {
+export const DashboardTable = ({
+  selectedAreaId,
+  name,
+}: {
+  name: string;
+  selectedAreaId: string;
+}) => {
   const getDay = (date: Date) => {
     if (isToday(date)) {
       return `Idag kl: ${format(date, "k:m")}`;
@@ -36,6 +44,7 @@ export const DashboardTable = () => {
     }
     return `${differenceInCalendarMonths(new Date(), date)} måneder siden`;
   };
+
   const getColor = (state: string) => {
     if (state === "error") return "red";
     if (state === "onGoing") return "gray";
@@ -48,8 +57,17 @@ export const DashboardTable = () => {
     }
     return robot;
   };
-
-  const data = inspections.slice(0, 8);
+  console.log(selectedAreaId);
+  const [inspections, setInspections] = useState<InspectionFirebase[]>([]);
+  const fetchInspectionForArea = useCallback(async () => {
+    const data = await getInspections("L3efsOXfN3FUE8WTwxKu");
+    if (data.length > 0) {
+      setInspections(() => data);
+    }
+  }, []);
+  useEffect(() => {
+    fetchInspectionForArea();
+  }, [fetchInspectionForArea]);
   return (
     <Table>
       <TableHeader>
@@ -61,10 +79,10 @@ export const DashboardTable = () => {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {data.map((inspection) => (
+        {inspections.map((inspection) => (
           <TableRow key={inspection.id}>
             <TableCell className="h-8 p-2 text-nowrap text-left pl-3">
-              {getDay(new Date(inspection.time))}
+              {getDay(new Date(inspection.date))}
             </TableCell>
             <TableCell className="h-8 p-2">{getRobot("drone")}</TableCell>
             <TableCell
@@ -74,7 +92,7 @@ export const DashboardTable = () => {
               {inspection.status}
             </TableCell>
             <TableCell className="h-8 p-2 text-center">
-              {inspection.detentions.length}
+              {inspection.detensionCount}
             </TableCell>
           </TableRow>
         ))}
@@ -83,11 +101,15 @@ export const DashboardTable = () => {
         <TableRow>
           <TableCell colSpan={2}>Total</TableCell>
           <TableCell className="text-left text-red-500">
-            Error: {data.filter((item) => item.status === "error").length}
+            Error:{" "}
+            {inspections.filter((item) => item.status === "error").length}
           </TableCell>
           <TableCell className="text-right">
             Avvik:{" "}
-            {data.reduce((sum, value) => (sum += value.detentions.length), 0)}
+            {inspections.reduce(
+              (sum, value) => (sum += value.detensionCount),
+              0
+            )}
           </TableCell>
         </TableRow>
       </TableFooter>

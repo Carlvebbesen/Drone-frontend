@@ -10,16 +10,18 @@ import React, {
 import useScript from "react-script-hook";
 import { MazemapPos, BlueDot, RouteProps, PoiProps, LngLat } from "./mapUtils";
 import { ConvertedFormatTrippel, revertToTrippelNestedList } from "@/lib/utils";
+import { BuildingAreaFirebase } from "@/lib/dataTypes";
 
 declare global {
   let Mazemap: any;
 }
 interface MapWrapperProps {
   heatMap?: any;
-  showFloorLayer?: boolean;
   destroyOldDots?: boolean;
   zoom?: number;
   center?: LngLat;
+  selectedArea?: BuildingAreaFirebase | undefined;
+  setPointClicked?: Dispatch<SetStateAction<MazemapPos | undefined>>;
   onRoute?: ({
     route,
     roomDimension,
@@ -32,7 +34,7 @@ interface MapWrapperProps {
   showDrones?: boolean;
   routePoints?: { pos: MazemapPos }[];
   setRoutePoints?: Dispatch<SetStateAction<{ pos: MazemapPos }[]>>;
-  allFloors: {
+  allFloors?: {
     name: string;
     zLevel: number;
     id: number;
@@ -44,8 +46,8 @@ interface MapWrapperProps {
   zLevel: number;
   showDots?: boolean;
   className?: string;
-  setLoading?: Dispatch<SetStateAction<boolean>>;
-  dronePositions?: { pos: MazemapPos; id: string }[];
+  setLoading?: Dispatch<SetStateAction<Boolean>>;
+  allDrones?: { pos: MazemapPos; id: string; buildingAreaId: string }[];
   displayInspection?: boolean;
   setRoomsClicked?: Dispatch<SetStateAction<PoiProps[]>>;
 }
@@ -54,9 +56,11 @@ export const MazeMapWrapper = ({
   onRoute,
   zoom = 19,
   center = { lng: 10.405510225389492, lat: 63.41556139549505 },
-  dronePositions = [],
+  allDrones = [],
   className,
   setLoading,
+  selectedArea,
+  setPointClicked,
   routePoints = [],
   destroyOldDots = false,
   displayInspection = false,
@@ -67,8 +71,8 @@ export const MazeMapWrapper = ({
   zLevel,
   heatMap,
   showDots = false,
-  showFloorLayer = false,
 }: MapWrapperProps) => {
+  const droneMarkerRef = useRef<any>();
   const myMapRef = useRef<any>();
   const lastDotRef = useRef<BlueDot>();
   const [loaded, setLoaded] = useState<boolean>(false);
@@ -77,19 +81,38 @@ export const MazeMapWrapper = ({
   });
   const routeControllerRef = useRef<any>();
   const addFloorLayer = () => {
-    myMapRef.current.addLayer({
-      id: "custom-floor-fill",
-      type: "fill",
-      source: {
-        type: "geojson",
-        data: null,
-      },
-      paint: {
-        // "fill-outline-color": "#fc0",
-        "fill-color": "#ADDFFF",
-        "fill-opacity": 0.5,
-      },
-    });
+    if (allFloors && !myMapRef.current.getSource("custom-floor-fill")) {
+      myMapRef.current.addLayer({
+        id: "custom-floor-fill",
+        type: "fill",
+        source: {
+          type: "geojson",
+          data: null,
+        },
+        paint: {
+          // "fill-outline-color": "#fc0",
+          "fill-color": "#ADDFFF",
+          "fill-opacity": 0.5,
+        },
+      });
+    }
+  };
+  const addAreaLayer = () => {
+    if (!myMapRef.current.getSource("custom-area-fill")) {
+      myMapRef.current.addLayer({
+        id: "custom-area-fill",
+        type: "fill",
+        source: {
+          type: "geojson",
+          data: null,
+        },
+        paint: {
+          // "fill-color": "#4AA02C",
+          "fill-color": "#D21404",
+          "fill-opacity": 0.5,
+        },
+      });
+    }
   };
 
   const addHeatMap = () => {
@@ -155,7 +178,7 @@ export const MazeMapWrapper = ({
 
   const findClosestDrone = async (pos: MazemapPos) => {
     const distances = await Promise.all(
-      dronePositions.map(async (drone) => {
+      allDrones.map(async (drone) => {
         const route: RouteProps = await Mazemap.Data.getRouteJSON(
           drone.pos,
           pos
@@ -194,9 +217,6 @@ export const MazeMapWrapper = ({
         closestDrone.drone.pos.zLevel,
         false
       );
-      // room.geometry.coordinates[0].forEach((item) => {
-      //   createDot({ lng: item[0], lat: item[1] }, 1, true);
-      // });
       newPath(closestDrone);
       onRoute({
         route: closestDrone.route,
@@ -212,6 +232,7 @@ export const MazeMapWrapper = ({
     const dotRef = createDot(lngLat, zLevel, true);
     destroyOldDots && lastDotRef.current?.destroy();
     lastDotRef.current = dotRef;
+    setPointClicked && setPointClicked({ lngLat, zLevel });
     await highlightRoom({ lngLat: lngLat, zLevel: zLevel });
     setRoutePoints &&
       setRoutePoints((prev) => [...prev, { pos: { lngLat, zLevel } }]);
@@ -250,12 +271,52 @@ export const MazeMapWrapper = ({
   };
   const redrawFloorPlans = () => {
     const zLevel = myMapRef.current.getZLevel();
-    if (myMapRef.current.getSource("custom-floor-fill")) {
+    if (droneMarkerRef.current) {
+      console.log("removing Drone");
+      droneMarkerRef.current.remove();
+    }
+    if (myMapRef.current.getSource("custom-area-fill")) {
+      console.log("removing area fill");
+      //Removing the fill by passing in an empty object
+      myMapRef.current.getSource("custom-area-fill").setData({
+        type: "FeatureCollection",
+        features: [
+          {
+            type: "Feature",
+            properties: {
+              buildingId: 67,
+              campusId: 1,
+              flags: [],
+              z: -4,
+              name: "Floor Fill",
+              id: "randomId12213",
+            },
+            geometry: {
+              type: "Polygon",
+              coordinates: [],
+            },
+          },
+        ],
+      });
+    }
+    if (
+      myMapRef.current.getSource("custom-floor-fill") &&
+      allFloors &&
+      !selectedArea
+    ) {
+      console.log("Updating floor");
+      const bounds = new Mazemap.mapboxgl.LngLatBounds();
       myMapRef.current.getSource("custom-floor-fill").setData({
         type: "FeatureCollection",
         features: allFloors
           .filter((item) => item.zLevel === zLevel)
           .map((floor) => {
+            revertToTrippelNestedList(
+              floor.geometry.coordinates
+            ).coordinates[0].forEach((item) => {
+              bounds.extend(item);
+            });
+            myMapRef.current.fitBounds(bounds, { padding: 100 });
             return {
               type: "Feature",
               properties: {
@@ -279,7 +340,6 @@ export const MazeMapWrapper = ({
   };
 
   const onMapClick = async (e: any) => {
-    setLoading && setLoading(true);
     let zLevel = myMapRef.current.zLevel;
     showDots && updateClickedPos(e.lngLat, zLevel);
     if (showDots) {
@@ -291,34 +351,99 @@ export const MazeMapWrapper = ({
       generateRoute(e.lngLat, room);
       setRoomsClicked && setRoomsClicked((prev) => [...prev, room]);
     }
-    setLoading && setLoading(false);
   };
 
   const onLoad = async (): Promise<void> => {
     //initialize the highlighter
-
-    myMapRef.current.highlighter = new Mazemap.Highlighter(myMapRef.current, {
-      showOutline: true, // optional
-      showFill: true, // optional
-      outlineColor: Mazemap.Util.Colors.MazeColors.MazeBlue, // optional
-      fillColor: Mazemap.Util.Colors.MazeColors.MazeBlue, // optional
-    });
+    if (
+      !myMapRef.current.getSource("mm-feature-highlight-fill") ||
+      !myMapRef.current.getSource("mm-feature-highlight-outline")
+    ) {
+      myMapRef.current.highlighter = new Mazemap.Highlighter(myMapRef.current, {
+        showOutline: true, // optional
+        showFill: true, // optional
+        outlineColor: Mazemap.Util.Colors.MazeColors.MazeBlue, // optional
+        fillColor: Mazemap.Util.Colors.MazeColors.MazeBlue, // optional
+      });
+    }
     //initialize the route controller
     routeControllerRef.current = new Mazemap.RouteController(myMapRef.current, {
       routeLineColorPrimary: "#0099EA",
       routeLineColorSecondary: "#888888",
       showDirectionArrows: true,
     });
-    if (dronePositions.length > 0 && showDrones) {
-      dronePositions.forEach((drone) =>
-        createDot(drone.pos.lngLat, drone.pos.zLevel, false)
-      );
-    }
     heatMap && addHeatMap();
-    showFloorLayer && addFloorLayer();
+    allFloors && addFloorLayer();
+    addAreaLayer();
     displayInspection && (await displayInspectionRoute());
     setLoaded(true);
   };
+
+  useEffect(() => {
+    if (loaded) {
+      setLoading && setLoading(true);
+      if (!myMapRef.current.getSource("custom-area-fill")) {
+        addAreaLayer();
+      }
+      if (selectedArea) {
+        console.log("drawing area");
+        const bounds = new Mazemap.mapboxgl.LngLatBounds();
+        myMapRef.current.getSource("custom-area-fill").setData({
+          type: "FeatureCollection",
+          features: selectedArea.rooms.map((area) => {
+            revertToTrippelNestedList(
+              area.geometry.coordinates
+            ).coordinates[0].forEach((item) => {
+              bounds.extend(item);
+            });
+            return {
+              type: "Feature",
+              properties: {
+                building: area.properties.buildingId,
+                campusId: 1,
+                zLevel: area.properties.zLevel,
+                z: area.properties.zLevel,
+                name: area.properties.names.join(" "),
+                id: area.properties.id,
+              },
+              geometry: {
+                type: "Polygon",
+                coordinates: revertToTrippelNestedList(
+                  area.geometry.coordinates
+                ).coordinates,
+              },
+            };
+          }),
+        });
+        if (droneMarkerRef.current) {
+          droneMarkerRef.current.remove();
+        }
+        if (allDrones) {
+          const areaDrone = allDrones.find(
+            (drone) => drone.buildingAreaId === selectedArea.id
+          );
+          if (areaDrone) {
+            console.log("Applying drone to map");
+            const options = {
+              imgUrl: "/telloDrone.webp",
+              imgScale: 0.8,
+              color: "MazePurple",
+              size: 60,
+              innerCircle: false,
+              innerCircleScale: 0.3,
+              shape: "marker",
+              zLevel: areaDrone.pos.zLevel,
+            };
+            droneMarkerRef.current = new Mazemap.MazeMarker(options)
+              .setLngLat(areaDrone.pos.lngLat)
+              .addTo(myMapRef.current);
+          }
+        }
+        myMapRef.current.fitBounds(bounds, { padding: 170 });
+      }
+      setLoading && setLoading(false);
+    }
+  }, [selectedArea, loaded, allDrones, setLoading]);
 
   useEffect(() => {
     if (loaded) {

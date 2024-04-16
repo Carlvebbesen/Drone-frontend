@@ -76,7 +76,7 @@ export interface Properties {
 }
 export interface Geometry {
   type: string;
-  coordinates: number[][];
+  coordinates: number[][][];
 }
 
 export interface BlueDot {
