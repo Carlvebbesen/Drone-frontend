@@ -19,6 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
+import { ArrowBigLeft } from "lucide-react";
 
 const DesktopNavigation = () => {
   const pathname = usePathname();
@@ -29,6 +30,14 @@ const DesktopNavigation = () => {
         <Link href="/">
           <DroneLogo />
         </Link>
+        {pathname !== "/" && (
+          <Button variant={"outline"}>
+            <Link className="flex justify-center items-center gap-3" href={"/"}>
+              <ArrowBigLeft />
+              Til Dashboard
+            </Link>
+          </Button>
+        )}
       </div>
 
       {isSignedIn ? (
@@ -50,7 +59,7 @@ const DesktopNavigation = () => {
             <DropdownMenu>
               <DropdownMenuTrigger>
                 {user && (
-                  <p className="text-start w-full">
+                  <p className="text-start w-full underline">
                     Velkommen tilbake, {user.displayName} !
                   </p>
                 )}

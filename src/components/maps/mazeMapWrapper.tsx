@@ -31,7 +31,6 @@ interface MapWrapperProps {
     roomDimension: PoiProps;
     drone: { pos: MazemapPos; id: string };
   }) => void;
-  showDrones?: boolean;
   routePoints?: { pos: MazemapPos }[];
   setRoutePoints?: Dispatch<SetStateAction<{ pos: MazemapPos }[]>>;
   allFloors?: {
@@ -66,7 +65,6 @@ export const MazeMapWrapper = ({
   displayInspection = false,
   setRoutePoints,
   setRoomsClicked,
-  showDrones = false,
   allFloors,
   zLevel,
   heatMap,
@@ -439,7 +437,7 @@ export const MazeMapWrapper = ({
               .addTo(myMapRef.current);
           }
         }
-        myMapRef.current.fitBounds(bounds, { padding: 170 });
+        myMapRef.current.fitBounds(bounds, { padding: 100 });
       }
       setLoading && setLoading(false);
     }

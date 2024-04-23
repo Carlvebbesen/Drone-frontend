@@ -2,7 +2,14 @@
 
 import { Geometry, MazemapPos, PoiPoint } from "@/components/maps/mapUtils";
 import { db } from "./config";
-import { doc, setDoc, addDoc, collection } from "firebase/firestore";
+import {
+  doc,
+  setDoc,
+  addDoc,
+  collection,
+  DocumentReference,
+  DocumentData,
+} from "firebase/firestore";
 import { convertFromTrippleNestedListToObject } from "../utils";
 import { initBuildingFloors } from "../initBuilding";
 import { subDays } from "date-fns";
@@ -107,8 +114,9 @@ export const createBuildingArea = async (data: BuildingArea) => {
   console.log("created doc buildingarea!!");
 };
 export interface Inspection {
-  id: string;
   floorId: number;
+  floorName: string;
+  areaName: string;
   buildingAreaId: string;
   droneId: string;
   date: Date;
@@ -121,8 +129,25 @@ export interface Inspection {
     | "room inspection"
     | "dust inspection";
 }
-export interface InspectionFirebase extends Inspection {
-  detensionCount: number;
+export interface InspectionFirebase extends fromFirebaseIns {
+  id: string;
+}
+export interface fromFirebaseIns {
+  floorId: number;
+  buildingAreaId: DocumentReference<DocumentData, DocumentData>;
+  droneId: string;
+  status: "Success" | "onGoing" | "error";
+  errorMsg: string;
+  statusMsg: string;
+  inspectionType:
+    | "escaperoute inspection"
+    | "ceiling inspection"
+    | "room inspection"
+    | "dust inspection";
+  date: {
+    seconds: number;
+    nanoseconds: number;
+  };
 }
 export const createSingleInspection = async (data: Inspection) => {
   const docRef = await addDoc(collection(db, "inspection"), {
@@ -130,6 +155,8 @@ export const createSingleInspection = async (data: Inspection) => {
     buildingAreaId: doc(db, "buildingArea", data.buildingAreaId),
     droneId: doc(db, "drones", data.droneId),
     date: data.date,
+    floorName: data.floorName,
+    areaName: data.areaName,
     status: data.status,
     errorMsg: data.errorMsg,
     statusMsg: data.statusMsg,
@@ -142,10 +169,14 @@ export const createInspectionSeries = async ({
   floorId,
   buildingAreaId,
   droneId,
+  floorName,
+  areaName,
   inspectionType,
   count,
 }: {
   floorId: number;
+  floorName: string;
+  areaName: string;
   buildingAreaId: string;
   droneId: string;
   count: number;
@@ -162,11 +193,12 @@ export const createInspectionSeries = async ({
       buildingAreaId: buildingAreaId,
       floorId: floorId,
       droneId: droneId,
+      floorName: floorName,
+      areaName: areaName,
       inspectionType: inspectionType,
       errorMsg: "",
       status: "Success",
       statusMsg: "Vellykket inspeksjon utført, ingen avvik funnet",
-      id: "test",
       date: subDays(new Date().setHours(4), random),
     });
     counter++;

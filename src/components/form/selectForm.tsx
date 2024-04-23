@@ -27,7 +27,7 @@ export const SelectForm = ({
   name: string;
   label: string;
   placeholder: string;
-  items: string[];
+  items: { value: string; label: string }[];
   desc: string;
 }) => {
   return (
@@ -45,8 +45,8 @@ export const SelectForm = ({
             </FormControl>
             <SelectContent>
               {items.map((item) => (
-                <SelectItem key={item} value={item}>
-                  {item}
+                <SelectItem key={item.value} value={item.value}>
+                  {item.label}
                 </SelectItem>
               ))}
             </SelectContent>

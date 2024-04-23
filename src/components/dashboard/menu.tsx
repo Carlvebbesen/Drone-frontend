@@ -48,7 +48,7 @@ export const DashboardMenu = ({
                     setSelectedArea((_) => undefined);
                     setSelectedFloor(() => floor);
                   }}
-                  className="font-bold text-xl hover:bg-gray-200 pl-4 cursor-pointer"
+                  className="font-bold text-x pl-4 cursor-pointer"
                   style={{
                     background: selectedFloor?.id === floor.id ? "#D3D3D3" : "",
                   }}

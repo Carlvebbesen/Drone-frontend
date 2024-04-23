@@ -1,4 +1,13 @@
 import { type ClassValue, clsx } from "clsx";
+import {
+  differenceInCalendarMonths,
+  differenceInDays,
+  differenceInWeeks,
+  format,
+  getMonth,
+  isToday,
+  isYesterday,
+} from "date-fns";
 import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
@@ -52,3 +61,31 @@ export function revertToTrippelNestedList(
 
   return { coordinates: revertedCoordinates };
 }
+
+export const getColor = (state: string) => {
+  if (state === "error") return "red";
+  if (state === "onGoing") return "gray";
+  if (state === "success") return "green";
+  return "";
+};
+
+export const getDay = (date: Date) => {
+  if (isToday(date)) {
+    return `Idag kl: ${format(date, "k:m")}`;
+  }
+  if (isYesterday(date)) {
+    return `Igår kl: ${format(date, "k:m")}`;
+  }
+  if (differenceInWeeks(new Date(), date) === 0) {
+    return "Forrige uke";
+  }
+  if (getMonth(date) === getMonth(new Date())) {
+    const count = differenceInWeeks(new Date(), date);
+    const days = differenceInDays(new Date(), date);
+    return `${count} ${count === 1 ? "uke" : "uker"} ${days !== 0 ? `, og ${days} dager` : ""} siden`;
+  }
+  if (differenceInCalendarMonths(new Date(), date)) {
+    return "Forrige måned";
+  }
+  return `${differenceInCalendarMonths(new Date(), date)} måneder siden`;
+};

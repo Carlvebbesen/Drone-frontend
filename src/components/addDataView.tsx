@@ -194,6 +194,8 @@ export const AddDataView = ({ building }: { building: Building }) => {
                           mutateWithToast({
                             mutatePromise: createInspectionSeries({
                               buildingAreaId: selectedArea.id,
+                              areaName: selectedArea.name,
+                              floorName: selectedFloor.name,
                               floorId: selectedArea.floorId,
                               droneId:
                                 drones.find(

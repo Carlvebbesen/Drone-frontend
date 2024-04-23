@@ -1,6 +1,7 @@
 import {
   DocumentData,
   DocumentReference,
+  and,
   collection,
   doc,
   getDoc,
@@ -12,7 +13,8 @@ import {
 import { db } from "./config";
 import { ConvertedFormatTrippel } from "../utils";
 import { BuildingAreaFirebase } from "../dataTypes";
-import { Drone, Inspection, InspectionFirebase } from "./createData";
+import { Drone, InspectionFirebase, fromFirebaseIns } from "./createData";
+import { LngLat } from "@/components/maps/mapUtils";
 
 export interface Building {
   name: string;
@@ -51,33 +53,74 @@ export const getBuildingAreas = async ({ floorId }: { floorId: number }) => {
   const res: BuildingAreaFirebase[] = [];
   docs.forEach((area) => {
     res.push({
-      id: area.id,
       ...(area.data() as BuildingAreaFirebase),
+      id: area.id,
     });
   });
   return res;
 };
-
+export const getBuildingArea = async ({
+  buildingArea,
+}: {
+  buildingArea: DocumentReference<DocumentData, DocumentData>;
+}) => {
+  const docSnap = await getDoc(buildingArea);
+  if (docSnap.exists()) {
+    return {
+      ...(docSnap.data() as BuildingAreaFirebase),
+      id: docSnap.id,
+      building: docSnap.data().building.toString(),
+    };
+  }
+  throw new Error("Building does not exist");
+};
+export interface DetensionFirebase {
+  id: string;
+  detensionCount: number;
+  inspectionId: string;
+  isValid: boolean;
+  location?: LngLat;
+  findings: {
+    id: string;
+    detensions: { [index: number]: { conf: number; name: string } };
+    frame: number;
+    imgId: string;
+  }[];
+}
 export const getDetensions = async ({
   inspectionId,
   countOnly,
 }: {
-  inspectionId: DocumentReference<DocumentData, DocumentData>;
+  inspectionId: string;
   countOnly: boolean;
 }) => {
   const detensionRef = collection(db, "detension");
-  const q = query(detensionRef, where("inspection", "==", inspectionId));
+  const q = query(
+    detensionRef,
+    where("inspectionId", "==", inspectionId),
+    where("detensionCount", ">", 0)
+  );
   const docs = await getDocs(q);
   if (countOnly) {
     return docs.size;
   }
-  const res: any[] = [];
-  docs.forEach((detension) => {
-    res.push({
-      id: detension.id,
-      ...(detension.data() as any),
-    });
-  });
+  const res: DetensionFirebase[] = [];
+  await Promise.all(
+    docs.docs.map(async (detension) => {
+      const tmp = {
+        id: detension.id,
+        ...(detension.data() as any),
+      };
+      const findings = collection(detension.ref, "findings");
+      const subCol = await getDocs(findings);
+
+      tmp["findings"] = [];
+      subCol.forEach((item) => {
+        tmp["findings"].push({ ...item.data() });
+      });
+      res.push(tmp);
+    })
+  );
   return res;
 };
 
@@ -85,22 +128,27 @@ export const getInspections = async (buildingAreaId: string) => {
   const inspectionRef = collection(db, "inspection");
   const q = query(
     inspectionRef,
-    orderBy("date"),
+    orderBy("date", "desc"),
     where("buildingAreaId", "==", doc(db, "buildingArea", buildingAreaId))
   );
   const docs = await getDocs(q);
   const res: InspectionFirebase[] = [];
-  docs.forEach(async (inspection) => {
+  docs.forEach((inspection) => {
     res.push({
       id: inspection.id,
-      ...(inspection.data() as Inspection),
-      detensionCount: (await getDetensions({
-        inspectionId: inspection.ref,
-        countOnly: true,
-      })) as number,
+      ...(inspection.data() as fromFirebaseIns),
     });
   });
   return res;
+};
+
+export const getInspection = async (inspectionId: string) => {
+  const docRef = doc(db, "inspection", inspectionId);
+  const docSnap = await getDoc(docRef);
+  if (docSnap.exists()) {
+    return { ...(docSnap.data() as fromFirebaseIns), id: docSnap.id };
+  }
+  throw new Error("Building does not exist");
 };
 export const getDrones = async () => {
   const droneRef = collection(db, "drones");
