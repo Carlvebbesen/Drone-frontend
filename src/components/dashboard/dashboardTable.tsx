@@ -21,12 +21,6 @@ import {
 export const DashboardTable = async ({
   selectedAreaId,
 }: {
-  searchParams: {
-    [index: string]: string;
-  };
-  params: {
-    [index: string]: string;
-  };
   selectedAreaId: string;
 }) => {
   const inspections = await getInspections(selectedAreaId);
