@@ -2,7 +2,15 @@ import { DetensionFirebase, getDetensions } from "@/lib/firebase/readData";
 import { Card, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
 
 import { InspectionValid } from "@/components/form/inspectionValid";
-import { ImageClient } from "@/components/dashboard/imageClient";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { fireStorageInstance } from "@/lib/firebase/config";
+import { getDownloadURL, ref } from "firebase/storage";
+import Image from "next/image";
 
 const transelateObject: { [index: string]: string } = {
   chair: "Stol",
@@ -31,8 +39,8 @@ const DetensionView = async ({
     inspectionId: params.id,
     countOnly: false,
   })) as DetensionFirebase[];
-  console.log("id", searchParams.id);
-  console.log(detensions);
+  console.log("Search Params", searchParams);
+  console.log("Params", params);
   const detension = detensions.find((item) => item.id === searchParams.id);
   if (!detension) {
     return (
@@ -43,7 +51,26 @@ const DetensionView = async ({
   }
   return (
     <div className="col-span-4 w-full px-32">
-      <ImageClient detension={detension} />
+      <Carousel>
+        <CarouselContent>
+          {detension.findings.map(async (item) => {
+            const url = await getDownloadURL(
+              ref(fireStorageInstance, item.imgId)
+            );
+            return (
+              <Image
+                alt="avviks-bilde"
+                width={500}
+                height={500}
+                key={item.id}
+                src={url}
+              />
+            );
+          })}
+        </CarouselContent>
+        <CarouselNext />
+        <CarouselPrevious />
+      </Carousel>
       <Card className="p-6">
         <CardTitle className="text-2xl font-semibold text-gray-600">
           Det ble funnet følgende avvik:
