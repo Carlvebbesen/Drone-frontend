@@ -28,6 +28,8 @@ const transelateObject: { [index: string]: string } = {
   sink: "Vask",
 };
 
+export const dynamic = "force-dynamic";
+
 const DetensionView = async ({
   searchParams,
   params,
