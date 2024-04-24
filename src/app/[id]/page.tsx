@@ -15,6 +15,7 @@ import Image from "next/image";
 import { Card, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
 
 import { InspectionValid } from "@/components/form/inspectionValid";
+import { ImageClient } from "@/components/dashboard/imageClient";
 
 const transelateObject: { [index: string]: string } = {
   chair: "Stol",
@@ -53,26 +54,7 @@ const DetensionView = async ({
   }
   return (
     <div className="col-span-4 w-full px-32">
-      <Carousel>
-        <CarouselContent>
-          {detension.findings.map(async (item) => {
-            const url = await getDownloadURL(
-              ref(fireStorageInstance, item.imgId)
-            );
-            return (
-              <Image
-                alt="avviks-bilde"
-                width={500}
-                height={500}
-                key={item.id}
-                src={url}
-              />
-            );
-          })}
-        </CarouselContent>
-        <CarouselNext />
-        <CarouselPrevious />
-      </Carousel>
+      <ImageClient detension={detension} />
       <Card className="p-6">
         <CardTitle className="text-2xl font-semibold text-gray-600">
           Det ble funnet følgende avvik:
