@@ -35,12 +35,11 @@ const DetensionView = async ({
   searchParams: { id: string };
   params: { id: string };
 }) => {
+  console.log("Search Params", searchParams);
   const detensions = (await getDetensions({
     inspectionId: params.id,
     countOnly: false,
   })) as DetensionFirebase[];
-  console.log("Search Params", searchParams);
-  console.log("Params", params);
   const detension = detensions.find((item) => item.id === searchParams.id);
   if (!detension) {
     return (
