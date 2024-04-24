@@ -13,7 +13,7 @@ export const MenuDetension = ({
 }) => {
   const searchParams = useSearchParams();
 
-  const activeItem = searchParams.get("id");
+  const activeItem = searchParams.get("detensionid");
   const pathname = usePathname();
   return (
     <div className="border flex-grow">
@@ -24,7 +24,7 @@ export const MenuDetension = ({
             activeItem === item.id ? "bg-gray-500" : ""
           )}
           key={item.id}
-          href={`${pathname}?id=${item.id}`}
+          href={`${pathname}?detensionid=${item.id}`}
         >
           <div>#{index + 1}</div>
           <div>Obstruksjoner: {item.detensionCount}</div>

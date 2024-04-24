@@ -28,13 +28,12 @@ const transelateObject: { [index: string]: string } = {
   sink: "Vask",
 };
 
-export const dynamic = "force-dynamic";
 
 const DetensionView = async ({
   searchParams,
   params,
 }: {
-  searchParams: { id: string };
+  searchParams: { detensionid: string };
   params: { id: string };
 }) => {
   console.log("Search Params", searchParams);
@@ -42,7 +41,7 @@ const DetensionView = async ({
     inspectionId: params.id,
     countOnly: false,
   })) as DetensionFirebase[];
-  const detension = detensions.find((item) => item.id === searchParams.id);
+  const detension = detensions.find((item) => item.id === searchParams.detensionid);
   if (!detension) {
     return (
       <div className="flex justify-center items-center">
