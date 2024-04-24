@@ -9,6 +9,7 @@ const nextConfig = {
         pathname: "/v0/b/drone-control-db.appspot.com/o/**",
       },
     ],
+    domains: ["firebasestorage.googleapis.com"],
   },
 };
 
