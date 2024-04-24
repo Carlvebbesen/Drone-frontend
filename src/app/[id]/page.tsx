@@ -1,17 +1,4 @@
-import { getStorage, ref, getDownloadURL } from "firebase/storage";
-
-import { useMutationWithToast } from "@/hooks/useMutationWithToast";
 import { DetensionFirebase, getDetensions } from "@/lib/firebase/readData";
-import { fireStorageInstance } from "@/lib/firebase/config";
-
-import {
-  Carousel,
-  CarouselContent,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
-import { redirect } from "next/navigation";
-import Image from "next/image";
 import { Card, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
 
 import { InspectionValid } from "@/components/form/inspectionValid";
@@ -44,6 +31,8 @@ const DetensionView = async ({
     inspectionId: params.id,
     countOnly: false,
   })) as DetensionFirebase[];
+  console.log("id", searchParams.id);
+  console.log(detensions);
   const detension = detensions.find((item) => item.id === searchParams.id);
   if (!detension) {
     return (

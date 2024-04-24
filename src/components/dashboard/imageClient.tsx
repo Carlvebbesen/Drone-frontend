@@ -16,6 +16,10 @@ export const ImageClient = ({
 }: {
   detension: DetensionFirebase;
 }) => {
+  console.log(detension);
+  console.log(
+    getDownloadURL(ref(fireStorageInstance, detension.findings[0].imgId))
+  );
   return (
     <Carousel>
       <CarouselContent>
