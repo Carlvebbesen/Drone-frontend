@@ -17,6 +17,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "../ui/pagination";
+import { Card } from "../ui/card";
 
 export const DashboardTable = async ({
   selectedAreaId,
@@ -25,7 +26,7 @@ export const DashboardTable = async ({
 }) => {
   const inspections = await getInspections(selectedAreaId);
   return (
-    <div className="flex items-center justify-start flex-col">
+    <div className="flex justify-between flex-col h-full pb-2">
       <Table>
         <TableHeader>
           <TableRow>
@@ -36,7 +37,7 @@ export const DashboardTable = async ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {inspections.map((inspection) => (
+          {inspections.slice(0, 10).map((inspection) => (
             <DashboardTableRow key={inspection.id} inspection={inspection} />
           ))}
           {inspections.length === 0 && (
@@ -46,30 +47,24 @@ export const DashboardTable = async ({
           )}
         </TableBody>
       </Table>
-      <Pagination>
-        <PaginationContent>
-          <PaginationItem>
-            <PaginationPrevious href="#" />
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink href="#1">1</PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink href="#2" isActive>
-              2
-            </PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink href="#3">3</PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationEllipsis />
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationNext href="#" />
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
+      <Card className="p-1">
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious href="#" />
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationLink href="#1">1</PaginationLink>
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationEllipsis />
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationNext href="#" />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      </Card>
     </div>
   );
 };

@@ -156,8 +156,8 @@ export const getDrones = async () => {
   const res: Drone[] = [];
   docs.forEach((area) => {
     res.push({
-      id: area.id,
       ...(area.data() as Drone),
+      id: area.id,
     });
   });
   return res;

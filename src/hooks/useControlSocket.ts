@@ -62,6 +62,7 @@ export const useControlSocket = () => {
           socket.connect();
         }
         updateData({
+          //@ts-ignore
           msg: details["description"],
           type: "disconnected",
         });

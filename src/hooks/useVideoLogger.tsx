@@ -51,6 +51,7 @@ export const useVideoLogger = () => {
           socket.connect();
         }
         updateData({
+          //@ts-ignore
           msg: details["description"],
           type: "disconnected",
         });

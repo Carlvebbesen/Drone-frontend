@@ -33,6 +33,7 @@ export function useArrowKeyPress(callback: (cmd: string) => void) {
           "f",
         ].includes(event.key)
       ) {
+        //@ts-ignore
         callback(keyBoardMapping[event.key]);
       }
     };
