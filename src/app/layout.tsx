@@ -18,10 +18,12 @@ export default function RootLayout({
     <html lang="en" className="m-0 p-0">
       <body className="h-full m-0 p-0">
         <AuthContextProvider>
-          <DesktopNavigation />
-          <main className="p-6 flex justify-center">{children}</main>
+          <main className="min-h-screen flex flex-col">
+            <DesktopNavigation />
+            {children}
+          </main>
+          <Toaster richColors closeButton />
         </AuthContextProvider>
-        <Toaster richColors closeButton />
       </body>
     </html>
   );

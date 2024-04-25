@@ -25,7 +25,7 @@ const DesktopNavigation = () => {
   const pathname = usePathname();
   const { isSignedIn, user } = useContext(AuthContext);
   return (
-    <NavigationMenu className="mt-3  px-6 min-w-full h-20 flex justify-between">
+    <NavigationMenu className="px-6 min-w-full py-4 flex justify-between items-center flex-grow-0">
       <div className="flex items-center justify-start">
         <Link href="/">
           <DroneLogo />

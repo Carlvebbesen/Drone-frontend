@@ -34,25 +34,29 @@ const InspectionPage = async ({
     countOnly: false,
   })) as DetensionFirebase[];
   return (
-    <div>
-      <h1 className="text-3xl font-bold mb-5 underline">
+    <div className="h-full px-10 flex-grow">
+      <h1 className="text-3xl font-bold my-5 underline">
         Inspeksjon av: {buildArea.name},{" "}
         {format(new Date(inspection.date.seconds * 1000), "d.LLL")} kl:{" "}
         {format(new Date(inspection.date.seconds * 1000), "HH:mm")}
       </h1>
-      <p>Totalt antall avvik:{detensions.length}</p>
-      <div className="grid grid-cols-5 h-full">
-        {detensions.length === 0 ? (
-          <div className="col-start-2 col-span-3 font-bold text-xl mt-40">
+      <p className="text-lg font-semibold mb-5">
+        Totalt antall avvik funnet:{detensions.length}
+      </p>
+      <div className="flex">
+        {detensions.length === 0 && (
+          <div className="font-bold text-xl mt-40 w-full text-center">
             Det ble ikke funnet noen avvik under denne inspeksjonen,
             rømningsveier og nødutganger kan derfor ansees som frie
           </div>
-        ) : (
-          <>
-            <MenuDetension detensions={detensions} />
-            {children}
-          </>
         )}
+        {detensions.length > 0 && (
+          <MenuDetension
+            inspectionTime={inspection.date.seconds}
+            detensions={detensions}
+          />
+        )}
+        {children}
       </div>
     </div>
   );

@@ -8,7 +8,7 @@ const CreateAdhoc = async () => {
   const floors = await getBuilding("Realfagsbygget");
 
   return (
-    <div>
+    <div className="p-10">
       <CreateInspection floorNames={floors.floorNames} />
     </div>
   );

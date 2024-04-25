@@ -22,11 +22,20 @@ import { Card } from "../ui/card";
 export const DashboardTable = async ({
   selectedAreaId,
 }: {
-  selectedAreaId: string;
+  selectedAreaId: string | undefined;
 }) => {
+  if (!selectedAreaId) {
+    return (
+      <div className="flex-grow flex justify-center p-10">
+        <p className="text-2xl text-gray-500 font-semibold">
+          Velg et område for å se inspeksjoner for det området
+        </p>
+      </div>
+    );
+  }
   const inspections = await getInspections(selectedAreaId);
   return (
-    <div className="flex justify-between flex-col h-full pb-2">
+    <div className="flex justify-between flex-col h-full pb-2 flex-grow">
       <Table>
         <TableHeader>
           <TableRow>

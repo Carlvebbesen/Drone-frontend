@@ -34,11 +34,11 @@ export const Dashboard = ({ building }: { building: Building }) => {
     id: 383,
   });
   return (
-    <div className="flex flex-grow items-start flex-col w-full px-10 h-full">
+    <div className="flex flex-grow items-start flex-col w-full px-10 h-full py-10">
       <h1 className="text-4xl font-bold mb-10">{building.name}</h1>
       <ResizablePanelGroup
         direction="horizontal"
-        className="rounded-lg border h-full"
+        className="rounded-lg border flex-grow "
       >
         <DashboardMenu
           size={10}
@@ -52,19 +52,17 @@ export const Dashboard = ({ building }: { building: Building }) => {
           defaultSize={80}
           className="flex justify-between items-start"
         >
-          {selectedArea && (
-            <Suspense
-              fallback={
-                <div className="flex items-center justify-center">
-                  <ReloadIcon className="mr-2 h-10 w-10 animate-spin" />
-                </div>
-              }
-            >
-              <DashboardTable selectedAreaId={selectedArea.id} />
-            </Suspense>
-          )}
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center flex-grow mt-24">
+                <ReloadIcon className="h-20 w-20 animate-spin" />
+              </div>
+            }
+          >
+            <DashboardTable selectedAreaId={selectedArea?.id} />
+          </Suspense>
           <MazeMapWrapper
-            className="min-w-[800px] h-[500px]"
+            className="min-w-[800px] w-[1000px] h-full"
             selectedArea={selectedArea}
             zLevel={selectedFloor.zLevel}
             zoom={16}
