@@ -34,7 +34,7 @@ const DesktopNavigation = () => {
           <Button variant={"outline"}>
             <Link className="flex justify-center items-center gap-3" href={"/"}>
               <ArrowBigLeft />
-              Til Dashboard
+              Til Hjem-skjerm
             </Link>
           </Button>
         )}
