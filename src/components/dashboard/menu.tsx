@@ -43,7 +43,7 @@ export const DashboardMenu = ({
               .sort((a, b) => b.zLevel - a.zLevel)
               .map((floor) => (
                 <CommandItem
-                  disabled={floor.zLevel < -1}
+                  disabled={floor.zLevel < -3}
                   onSelect={() => {
                     setSelectedArea((_) => undefined);
                     setSelectedFloor(() => floor);

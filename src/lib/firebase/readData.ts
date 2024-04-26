@@ -87,6 +87,38 @@ export interface DetensionFirebase {
     imgId: string;
   }[];
 }
+interface AllInspections extends InspectionFirebase {
+  detensionCount: number;
+  id: string;
+  buildingAreaName: string;
+}
+export const getAllInspectionsWithDetensions = async () => {
+  const detensionRef = collection(db, "detension");
+  const q = query(detensionRef, where("detensionCount", ">", 0));
+  const docs = await getDocs(q);
+  const res: AllInspections[] = [];
+  await Promise.all(
+    docs.docs.map(async (detension) => {
+      const inspection = await getDoc(
+        doc(db, "inspection", detension.data().inspectionId)
+      );
+      const detensionCount = detension.data().detensionCount;
+      //@ts-ignore
+      const buildingArea = await getDoc(inspection.data().buildingAreaId);
+      //@ts-ignore
+      res.push({
+        ...inspection.data(),
+        //@ts-ignore
+        buildingAreaName: buildingArea.data().name ?? "",
+        id: inspection.id,
+
+        detensionCount: detensionCount,
+      });
+    })
+  );
+  return res;
+};
+
 export const getDetensions = async ({
   inspectionId,
   countOnly,

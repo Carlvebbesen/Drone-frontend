@@ -6,7 +6,11 @@ export type Navigation = {
 const navigation: Navigation[] = [
   {
     href: "/create",
-    label: "Lag en Ad-hoc inspeksjon",
+    label: "Sett opp en Ad-hoc inspeksjon",
+  },
+  {
+    href: "/dashboard",
+    label: "Dashboard",
   },
   // {
   //   href: "/generateContent",

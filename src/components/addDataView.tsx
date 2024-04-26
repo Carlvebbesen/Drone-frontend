@@ -22,6 +22,7 @@ import { MazeMapWrapper } from "./maps/mazeMapWrapper";
 import { Label } from "@radix-ui/react-dropdown-menu";
 import { BuildingAreaFirebase } from "@/lib/dataTypes";
 import { Separator } from "./ui/separator";
+import { toast } from "sonner";
 
 export const AddDataView = ({ building }: { building: Building }) => {
   const { mutateWithToast, loading } = useMutationWithToast();
@@ -211,6 +212,8 @@ export const AddDataView = ({ building }: { building: Building }) => {
                               pluralForm: "inspeksjonsserien",
                             },
                           });
+                        } else {
+                          toast.error("Du må velde et område");
                         }
                       }}
                     >
