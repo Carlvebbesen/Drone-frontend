@@ -76,6 +76,13 @@ export const getDay = (date: Date) => {
   if (isYesterday(date)) {
     return `Igår kl: ${format(date, "k:m")}`;
   }
+
+  if (
+    differenceInDays(date, new Date()) == -2 ||
+    differenceInDays(date, new Date()) == -3
+  ) {
+    return `Onsdag kl: ${format(date, "k:m")}`;
+  }
   if (differenceInWeeks(new Date(), date) === 0) {
     return "Forrige uke";
   }

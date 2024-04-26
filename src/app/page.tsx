@@ -25,7 +25,7 @@ const Page = async () => {
     }
     return robot;
   };
-
+  console.log(inspections);
   return (
     <div className="p-10 flex flex-col justify-center items-center">
       <h1 className="text-2xl font-bold mb-20">

@@ -94,13 +94,12 @@ interface AllInspections extends InspectionFirebase {
 }
 export const getAllInspectionsWithDetensions = async () => {
   const detensionRef = collection(db, "detension");
-  const q = query(
-    detensionRef,
-    orderBy("date", "desc"),
-    where("detensionCount", ">", 0)
-  );
-  const docs = await getDocs(q);
+  // const q = query(detensionRef, orderBy("date", "desc"));
+  const docs = await getDocs(detensionRef);
+  console.log(docs.size);
+
   const res: AllInspections[] = [];
+
   await Promise.all(
     docs.docs.map(async (detension) => {
       const inspection = await getDoc(
@@ -120,7 +119,9 @@ export const getAllInspectionsWithDetensions = async () => {
       });
     })
   );
-  return res;
+  return res
+    .filter((item) => item.detensionCount > 0)
+    .sort((a, b) => b.date.seconds - a.date.seconds);
 };
 
 export const getDetensions = async ({
