@@ -107,7 +107,10 @@ export const getAllInspectionsWithDetensions = async () => {
       const detensionCount = detension.data().detensionCount;
       //@ts-ignore
       const buildingArea = await getDoc(inspection.data().buildingAreaId);
-      if (!res.find((item) => item.id === inspection.id)) {
+      if (
+        !res.find((item) => item.id === inspection.id) &&
+        detensionCount > 0
+      ) {
         //@ts-ignore
         res.push({
           ...inspection.data(),
@@ -120,9 +123,7 @@ export const getAllInspectionsWithDetensions = async () => {
       }
     })
   );
-  return res
-    .filter((item) => item.detensionCount > 0)
-    .sort((a, b) => b.date.seconds - a.date.seconds);
+  return res.sort((a, b) => b.date.seconds - a.date.seconds);
 };
 
 export const getDetensions = async ({
