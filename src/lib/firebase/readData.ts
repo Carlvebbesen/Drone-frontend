@@ -96,7 +96,6 @@ export const getAllInspectionsWithDetensions = async () => {
   const detensionRef = collection(db, "detension");
   // const q = query(detensionRef, orderBy("date", "desc"));
   const docs = await getDocs(detensionRef);
-  console.log(docs.size);
 
   const res: AllInspections[] = [];
 
@@ -108,15 +107,17 @@ export const getAllInspectionsWithDetensions = async () => {
       const detensionCount = detension.data().detensionCount;
       //@ts-ignore
       const buildingArea = await getDoc(inspection.data().buildingAreaId);
-      //@ts-ignore
-      res.push({
-        ...inspection.data(),
+      if (!res.find((item) => item.id === inspection.id)) {
         //@ts-ignore
-        buildingAreaName: buildingArea.data().name ?? "",
-        id: inspection.id,
+        res.push({
+          ...inspection.data(),
+          //@ts-ignore
+          buildingAreaName: buildingArea.data().name ?? "",
+          id: inspection.id,
 
-        detensionCount: detensionCount,
-      });
+          detensionCount: detensionCount,
+        });
+      }
     })
   );
   return res
