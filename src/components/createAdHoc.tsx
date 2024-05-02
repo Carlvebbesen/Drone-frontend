@@ -1,5 +1,4 @@
 "use client";
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -13,12 +12,11 @@ import {
 } from "@/components/ui/card";
 import { SelectForm } from "@/components/form/selectForm";
 import { DateForm } from "@/components/form/dateForm";
-import { MazemapPos, PoiProps, RouteProps } from "@/components/maps/mapUtils";
 import { MazeMapWrapper } from "@/components/maps/mazeMapWrapper";
 import { Button } from "./ui/button";
 import { useRouter } from "next/navigation";
 import { useMutationWithToast } from "@/hooks/useMutationWithToast";
-import { BuildingAreaFirebase } from "@/lib/dataTypes";
+import { BuildingAreaFirebase} from "@/lib/dataTypes";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { useEffect, useState } from "react";
@@ -54,19 +52,6 @@ const CreateInspection = ({
   useEffect(() => {
     fetchAreas();
   }, []);
-  const onRouteCreation = ({
-    route,
-    roomDimension,
-    drone,
-  }: {
-    route: RouteProps;
-    roomDimension: PoiProps;
-    drone: { pos: MazemapPos; id: string };
-  }) => {
-    console.log(route);
-    console.log(roomDimension);
-    console.log(drone);
-  };
   const formSchema = z
     .object({
       type: taskEnum,
@@ -88,9 +73,8 @@ const CreateInspection = ({
     mutateWithToast({
       mutatePromise: new Promise((resolve) =>
         setTimeout(() => {
-          router.push("/");
           resolve(true);
-        }, 1500)
+        }, 500)
       ),
       textObj: {
         actionType: "create",
@@ -104,7 +88,7 @@ const CreateInspection = ({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="grid grid-cols-1 gap-6 grid-flow-row md:grid-cols-2"
+        className="grid grid-cols-1 gap-6"
       >
         <div>
           <h1 className="text-2xl font-bold my-6">Inspiser et område:</h1>
@@ -156,22 +140,15 @@ const CreateInspection = ({
           <CardTitle>Inspeksjonsområde for dronen:</CardTitle>
           <CardContent className="mt-8">
             <MazeMapWrapper
+              generateMap={(values) => console.log(values)}
+              overlayTransparancy={1}
               zLevel={
                 floorNames.find(
                   (item) => item.id === parseInt(form.getValues("floor"))
                 )?.zLevel ?? 3
               }
-              className="h-96 w-full"
+              className="h-[1000px] w-[1000px]"
               selectedArea={areas.find((item) => item.id === area)}
-              onRoute={({
-                route,
-                roomDimension,
-                drone,
-              }: {
-                route: RouteProps;
-                roomDimension: PoiProps;
-                drone: { pos: MazemapPos; id: string };
-              }) => onRouteCreation({ route, roomDimension, drone })}
             />
           </CardContent>
         </Card>
@@ -210,6 +187,9 @@ const CreateInspection = ({
           </CardContent>
         </Card>
       </form>
+      <canvas className="h-96 w-[500px]" id="canvasId">
+        Canvas not supported
+      </canvas>
     </Form>
   );
 };

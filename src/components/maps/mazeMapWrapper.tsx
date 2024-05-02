@@ -11,12 +11,27 @@ import useScript from "react-script-hook";
 import { MazemapPos, BlueDot, RouteProps, PoiProps, LngLat } from "./mapUtils";
 import { ConvertedFormatTrippel, revertToTrippelNestedList } from "@/lib/utils";
 import { BuildingAreaFirebase } from "@/lib/dataTypes";
-
+import * as turf from "@turf/turf";
 declare global {
   let Mazemap: any;
 }
+
+interface MapProps {
+  pixelHeight: number;
+  pixelWidth: number;
+  viewWidthKm: number;
+  viewHeightKm: number;
+  imgUrl: string;
+  topLeft: number[];
+  topRight: number[];
+  bottomLeft: number[];
+  bottomRight: number[];
+  mapArea?: string;
+}
 interface MapWrapperProps {
   heatMap?: any;
+  generateMap?: (values: MapProps) => void;
+  overlayTransparancy?: number;
   destroyOldDots?: boolean;
   zoom?: number;
   center?: LngLat;
@@ -54,6 +69,8 @@ interface MapWrapperProps {
 export const MazeMapWrapper = ({
   onRoute,
   zoom = 19,
+  generateMap,
+  overlayTransparancy = 0.5,
   center = { lng: 10.405510225389492, lat: 63.41556139549505 },
   allDrones = [],
   className,
@@ -107,7 +124,7 @@ export const MazeMapWrapper = ({
         paint: {
           // "fill-color": "#4AA02C",
           "fill-color": "#D21404",
-          "fill-opacity": 0.5,
+          "fill-opacity": overlayTransparancy,
         },
       });
     }
@@ -336,8 +353,91 @@ export const MazeMapWrapper = ({
       });
     }
   };
+  const drawCanvas = () => {
+    const myCanva = myMapRef.current.getCanvas();
+    let canvas = document.getElementById("canvasId");
+    const width = myCanva.width;
+    const height = myCanva.height;
+    canvas?.setAttribute("width", width);
+    canvas?.setAttribute("height", height);
+    //@ts-ignore
+    const ctx = canvas.getContext("2d");
+    const cUL = myMapRef.current.unproject([0, 0]).toArray();
+    const cUR = myMapRef.current.unproject([width, 0]).toArray();
+    const cLR = myMapRef.current.unproject([width, height]).toArray();
+    const cLL = myMapRef.current.unproject([0, height]).toArray();
+    //blue dots
+    createDot({ lat: cUL[1], lng: cUL[0] }, 3, false);
+    createDot({ lat: cUR[1], lng: cUR[0] }, 3, false);
 
+    //Red dots
+    createDot({ lat: cLL[1], lng: cLL[0] }, 3, true);
+    createDot({ lat: cLR[1], lng: cLR[0] }, 3, true);
+    const distanceWidth1 = turf.distance(cUL, cUR, "kilometers");
+    const distanceWidth2 = turf.distance(cLL, cLR, "kilometers");
+    const distanceHeight1 = turf.distance(cUL, cLL, "kilometers");
+    const distanceHeight2 = turf.distance(cUR, cLR, "kilometers");
+    console.log("Real Distance");
+    console.log("height km", distanceHeight1);
+    console.log("height km", distanceHeight2);
+    console.log("width km", distanceWidth1);
+    console.log("width km", distanceWidth2);
+    console.log("pixel distance:");
+    console.log("width:", width);
+    console.log("height", height);
+    ctx.drawImage(myCanva, 0, 0);
+    const editedImage = ctx.getImageData(0, 0, width, height);
+    const data = editedImage.data;
+    console.log("Start editing");
+    const colors = new Map();
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      const count = colors.get(`${r} ${g} ${b}`) ?? 0;
+      colors.set(`${r} ${g} ${b}`, count + 1);
+      //rgb( 210, 20, 4)
+      // If the pixel is layer color, change it to white; otherwise, change it to black
+      if (r === 210 && g === 20 && b === 4) {
+        data[i] = 255; // Set red channel to 255 (white)
+        data[i + 1] = 255; // Set green channel to 255 (white)
+        data[i + 2] = 255; // Set blue channel to 255 (white)
+      } else {
+        data[i] = 0; // Set red channel to 200 (black)
+        data[i + 1] = 0; // Set green channel to 200 (black)
+        data[i + 2] = 0; // Set blue channel to 200 (black)
+      }
+    }
+    console.log("Finished editing");
+    console.log(editedImage.data.length);
+    ctx.putImageData(editedImage, 0, 0);
+    let canvasEdited = document.getElementById("canvasId");
+    generateMap &&
+      generateMap({
+        bottomLeft: cLL,
+        bottomRight: cLR,
+        topRight: cUR,
+        topLeft: cUL,
+        pixelHeight: height,
+        pixelWidth: width,
+        viewHeightKm: distanceHeight1,
+        viewWidthKm: distanceWidth1,
+        //@ts-ignore
+        imgUrl: canvasEdited?.toDataURL() ?? "",
+        mapArea: selectedArea?.name ?? "rom",
+      });
+    if (canvasEdited) {
+      var link = document.createElement("a");
+      link.download = `telloMap-${selectedArea?.name ?? "rom"}.png`;
+      //@ts-ignore
+      link.href = canvasEdited.toDataURL();
+      link.click();
+    } else {
+      console.log("Could not generate PNG");
+    }
+  };
   const onMapClick = async (e: any) => {
+    generateMap && drawCanvas();
     let zLevel = myMapRef.current.zLevel;
     showDots && updateClickedPos(e.lngLat, zLevel);
     if (showDots) {
@@ -461,6 +561,7 @@ export const MazeMapWrapper = ({
         touchZoomRotate: false,
         zLevelControl: false,
         hash: true,
+        preserveDrawingBuffer: true,
       });
       myMapRef.current.addControl(new Mazemap.mapboxgl.NavigationControl());
       myMapRef.current.on("click", onMapClick);
