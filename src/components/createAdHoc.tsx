@@ -16,7 +16,7 @@ import { MazeMapWrapper } from "@/components/maps/mazeMapWrapper";
 import { Button } from "./ui/button";
 import { useRouter } from "next/navigation";
 import { useMutationWithToast } from "@/hooks/useMutationWithToast";
-import { BuildingAreaFirebase} from "@/lib/dataTypes";
+import { BuildingAreaFirebase } from "@/lib/dataTypes";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { useEffect, useState } from "react";
@@ -140,7 +140,9 @@ const CreateInspection = ({
           <CardTitle>Inspeksjonsområde for dronen:</CardTitle>
           <CardContent className="mt-8">
             <MazeMapWrapper
-              generateMap={(values) => console.log(values)}
+              generateMap={(values) =>
+                console.log(values)
+              }
               overlayTransparancy={1}
               zLevel={
                 floorNames.find(
@@ -187,7 +189,7 @@ const CreateInspection = ({
           </CardContent>
         </Card>
       </form>
-      <canvas className="h-96 w-[500px]" id="canvasId">
+      <canvas className="h-[1000px] w-[1000px]" id="canvasId">
         Canvas not supported
       </canvas>
     </Form>

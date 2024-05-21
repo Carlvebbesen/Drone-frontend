@@ -19,8 +19,9 @@ declare global {
 interface MapProps {
   pixelHeight: number;
   pixelWidth: number;
-  viewWidthKm: number;
-  viewHeightKm: number;
+  viewWidthMeter: number;
+  viewHeightMeter: number;
+  resolution: number;
   imgUrl: string;
   topLeft: number[];
   topRight: number[];
@@ -373,18 +374,20 @@ export const MazeMapWrapper = ({
     //Red dots
     createDot({ lat: cLL[1], lng: cLL[0] }, 3, true);
     createDot({ lat: cLR[1], lng: cLR[0] }, 3, true);
-    const distanceWidth1 = turf.distance(cUL, cUR, "kilometers");
-    const distanceWidth2 = turf.distance(cLL, cLR, "kilometers");
-    const distanceHeight1 = turf.distance(cUL, cLL, "kilometers");
-    const distanceHeight2 = turf.distance(cUR, cLR, "kilometers");
-    console.log("Real Distance");
-    console.log("height km", distanceHeight1);
-    console.log("height km", distanceHeight2);
+    const options = { units: "meters" };
+    //@ts-ignore
+    const distanceWidth1 = turf.distance(cUL, cUR, options);
+    //@ts-ignore
+    const distanceWidth2 = turf.distance(cLL, cLR, options);
+    //@ts-ignore
+    const distanceHeight1 = turf.distance(cUL, cLL, options);
+    //@ts-ignore
+    const distanceHeight2 = turf.distance(cUR, cLR, options);
+    // console.log("width diff: ", distanceWidth1 - distanceWidth2);
+    // console.log("height diff: ", distanceHeight1 - distanceHeight2);
+    // console.log("Real Distance");
+    // console.log("height km", distanceHeight1);
     console.log("width km", distanceWidth1);
-    console.log("width km", distanceWidth2);
-    console.log("pixel distance:");
-    console.log("width:", width);
-    console.log("height", height);
     ctx.drawImage(myCanva, 0, 0);
     const editedImage = ctx.getImageData(0, 0, width, height);
     const data = editedImage.data;
@@ -408,8 +411,6 @@ export const MazeMapWrapper = ({
         data[i + 2] = 0; // Set blue channel to 200 (black)
       }
     }
-    console.log("Finished editing");
-    console.log(editedImage.data.length);
     ctx.putImageData(editedImage, 0, 0);
     let canvasEdited = document.getElementById("canvasId");
     generateMap &&
@@ -420,10 +421,12 @@ export const MazeMapWrapper = ({
         topLeft: cUL,
         pixelHeight: height,
         pixelWidth: width,
-        viewHeightKm: distanceHeight1,
-        viewWidthKm: distanceWidth1,
+        viewHeightMeter: Math.max(distanceHeight1, distanceHeight2),
+        viewWidthMeter: Math.max(distanceWidth1, distanceWidth2),
         //@ts-ignore
-        imgUrl: canvasEdited?.toDataURL() ?? "",
+        // imgUrl: canvasEdited?.toDataURL() ?? "",
+        imgUrl: "",
+        resolution: Math.max(distanceWidth1, distanceWidth2) / width,
         mapArea: selectedArea?.name ?? "rom",
       });
     if (canvasEdited) {
