@@ -74,42 +74,42 @@ export const getBuildingArea = async ({
   }
   throw new Error("Building does not exist");
 };
-export interface DetensionFirebase {
+export interface deviationFirebase {
   id: string;
-  detensionCount: number;
+  deviationCount: number;
   inspectionId: string;
   isValid: boolean;
   location?: LngLat;
   findings: {
     id: string;
-    detensions: { [index: number]: { conf: number; name: string } };
+    deviations: { [index: number]: { conf: number; name: string } };
     frame: number;
     imgId: string;
   }[];
 }
 interface AllInspections extends InspectionFirebase {
-  detensionCount: number;
+  deviationCount: number;
   id: string;
   buildingAreaName: string;
 }
-export const getAllInspectionsWithDetensions = async () => {
-  const detensionRef = collection(db, "detension");
-  // const q = query(detensionRef, orderBy("date", "desc"));
-  const docs = await getDocs(detensionRef);
+export const getAllInspectionsWithdeviations = async () => {
+  const deviationRef = collection(db, "deviation");
+  // const q = query(deviationRef, orderBy("date", "desc"));
+  const docs = await getDocs(deviationRef);
 
   const res: AllInspections[] = [];
 
   await Promise.all(
-    docs.docs.map(async (detension) => {
+    docs.docs.map(async (deviation) => {
       const inspection = await getDoc(
-        doc(db, "inspection", detension.data().inspectionId)
+        doc(db, "inspection", deviation.data().inspectionId)
       );
-      const detensionCount = detension.data().detensionCount;
+      const deviationCount = deviation.data().deviationCount;
       //@ts-ignore
       const buildingArea = await getDoc(inspection.data().buildingAreaId);
       if (
         !res.find((item) => item.id === inspection.id) &&
-        detensionCount > 0
+        deviationCount > 0
       ) {
         //@ts-ignore
         res.push({
@@ -118,7 +118,7 @@ export const getAllInspectionsWithDetensions = async () => {
           buildingAreaName: buildingArea.data().name ?? "",
           id: inspection.id,
 
-          detensionCount: detensionCount,
+          deviationCount: deviationCount,
         });
       }
     })
@@ -126,31 +126,31 @@ export const getAllInspectionsWithDetensions = async () => {
   return res.sort((a, b) => b.date.seconds - a.date.seconds);
 };
 
-export const getDetensions = async ({
+export const getdeviations = async ({
   inspectionId,
   countOnly,
 }: {
   inspectionId: string;
   countOnly: boolean;
 }) => {
-  const detensionRef = collection(db, "detension");
+  const deviationRef = collection(db, "deviation");
   const q = query(
-    detensionRef,
+    deviationRef,
     where("inspectionId", "==", inspectionId),
-    where("detensionCount", ">", 0)
+    where("deviationCount", ">", 0)
   );
   const docs = await getDocs(q);
   if (countOnly) {
     return docs.size;
   }
-  const res: DetensionFirebase[] = [];
+  const res: deviationFirebase[] = [];
   await Promise.all(
-    docs.docs.map(async (detension) => {
+    docs.docs.map(async (deviation) => {
       const tmp = {
-        id: detension.id,
-        ...(detension.data() as any),
+        id: deviation.id,
+        ...(deviation.data() as any),
       };
-      const findings = collection(detension.ref, "findings");
+      const findings = collection(deviation.ref, "findings");
       const subCol = await getDocs(findings);
 
       tmp["findings"] = [];

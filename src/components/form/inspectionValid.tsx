@@ -26,7 +26,7 @@ export const InspectionValid = ({
   const changeValue = (val: boolean) => {
     mutateWithToast({
       mutatePromise: new Promise(async (resolve) => {
-        await updateDoc(doc(db, "detension", id), { isValid: val });
+        await updateDoc(doc(db, "deviation", id), { isValid: val });
         resolve(true);
       }),
       textObj: {

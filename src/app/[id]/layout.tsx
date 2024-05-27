@@ -1,13 +1,13 @@
 import { TelloDrone } from "@/components/logo/telloDrone";
 import {
-  DetensionFirebase,
+  deviationFirebase,
   getBuildingArea,
-  getDetensions,
+  getdeviations,
   getInspection,
 } from "@/lib/firebase/readData";
 import { format } from "date-fns";
 import { redirect } from "next/navigation";
-import { MenuDetension } from "./menu";
+import { Menudeviation } from "./menu";
 
 const InspectionPage = async ({
   params,
@@ -16,7 +16,7 @@ const InspectionPage = async ({
   children: React.ReactNode;
   params: {
     id: string;
-    detension: string;
+    deviation: string;
     [key: string]: string | undefined;
   };
 }) => {
@@ -29,10 +29,10 @@ const InspectionPage = async ({
   const buildArea = await getBuildingArea({
     buildingArea: inspection.buildingAreaId,
   });
-  const detensions = (await getDetensions({
+  const deviations = (await getdeviations({
     inspectionId: id,
     countOnly: false,
-  })) as DetensionFirebase[];
+  })) as deviationFirebase[];
   return (
     <div className="h-full px-10 flex-grow">
       <h1 className="text-3xl font-bold my-5 underline">
@@ -41,19 +41,19 @@ const InspectionPage = async ({
         {format(new Date(inspection.date.seconds * 1000), "HH:mm")}
       </h1>
       <p className="text-lg font-semibold mb-5">
-        Totalt antall avvik funnet:{detensions.length}
+        Totalt antall avvik funnet:{deviations.length}
       </p>
       <div className="flex">
-        {detensions.length === 0 && (
+        {deviations.length === 0 && (
           <div className="font-bold text-xl mt-40 w-full text-center">
             Det ble ikke funnet noen avvik under denne inspeksjonen,
             rømningsveier og nødutganger kan derfor ansees som frie
           </div>
         )}
-        {detensions.length > 0 && (
-          <MenuDetension
+        {deviations.length > 0 && (
+          <Menudeviation
             inspectionTime={inspection.date.seconds}
-            detensions={detensions}
+            deviations={deviations}
           />
         )}
         {children}

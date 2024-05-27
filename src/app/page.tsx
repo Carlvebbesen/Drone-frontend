@@ -11,14 +11,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  getAllInspectionsWithDetensions,
+  getAllInspectionsWithdeviations,
   getBuildingAreas,
 } from "@/lib/firebase/readData";
 import { getColor, getDay } from "@/lib/utils";
 import Link from "next/link";
 
 const Page = async () => {
-  const inspections = await getAllInspectionsWithDetensions();
+  const inspections = await getAllInspectionsWithdeviations();
   const getRobot = (robot: string) => {
     if (robot === "drone") {
       return <TelloDrone size={40} />;
@@ -65,7 +65,7 @@ const Page = async () => {
                 </TableCell>
                 <TableCell className="h-8 p-2 text-center">
                   <Link href={`/${inspection.id}`}>
-                    {inspection.detensionCount}
+                    {inspection.deviationCount}
                   </Link>
                 </TableCell>
                 <TableCell>

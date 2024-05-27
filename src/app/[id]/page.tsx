@@ -1,7 +1,7 @@
 import {
-  DetensionFirebase,
+  deviationFirebase,
   getBuildingArea,
-  getDetensions,
+  getdeviations,
   getDrones,
   getInspection,
 } from "@/lib/firebase/readData";
@@ -51,11 +51,11 @@ const months: { [index: number]: string } = {
   12: "desember",
 };
 
-const DetensionView = async ({
+const deviationView = async ({
   searchParams,
   params,
 }: {
-  searchParams: { detensionid: string };
+  searchParams: { deviationid: string };
   params: { id: string };
 }) => {
   const inspection = await getInspection(params.id);
@@ -63,17 +63,17 @@ const DetensionView = async ({
     buildingArea: inspection.buildingAreaId,
   });
   const drones = await getDrones();
-  const detensions = (await getDetensions({
+  const deviations = (await getdeviations({
     inspectionId: params.id,
     countOnly: false,
-  })) as DetensionFirebase[];
-  const detension = detensions.find(
-    (item) => item.id === searchParams.detensionid
+  })) as deviationFirebase[];
+  const deviation = deviations.find(
+    (item) => item.id === searchParams.deviationid
   );
-  if (detensions.length === 0) {
+  if (deviations.length === 0) {
     return <div></div>;
   }
-  if (!detension) {
+  if (!deviation) {
     return (
       <div className="flex justify-center items-center px-24">
         <h1 className="text-3xl text-gray-500 font-bold">Velg et avvik</h1>
@@ -85,7 +85,7 @@ const DetensionView = async ({
       <div className="px-20">
         <Carousel>
           <CarouselContent>
-            {detension.findings.map(async (item) => {
+            {deviation.findings.map(async (item) => {
               const url = await getDownloadURL(
                 ref(fireStorageInstance, item.imgId)
               );
@@ -129,21 +129,21 @@ const DetensionView = async ({
             {format(
               new Date(
                 inspection.date.seconds * 1000 +
-                  (detension.findings[0].frame / 25) * 1000
+                  (deviation.findings[0].frame / 25) * 1000
               ),
               "HH:mm:s"
             )}{" "}
             den{" "}
             {new Date(
               inspection.date.seconds * 1000 +
-                (detension.findings[0].frame / 25) * 1000
+                (deviation.findings[0].frame / 25) * 1000
             ).getDate()}
             {". "}
             {
               months[
                 new Date(
                   inspection.date.seconds * 1000 +
-                    (detension.findings[0].frame / 25) * 1000
+                    (deviation.findings[0].frame / 25) * 1000
                 ).getMonth()
               ]
             }
@@ -158,9 +158,9 @@ const DetensionView = async ({
             <li>
               {
                 new Set(
-                  detension.findings
+                  deviation.findings
                     .map((item) =>
-                      Object.values(item.detensions).map(
+                      Object.values(item.deviations).map(
                         (det) => transelateObject[det.name] ?? det.name
                       )
                     )
@@ -169,15 +169,15 @@ const DetensionView = async ({
               }
             </li>
           </div>
-          <InspectionValid isValid={detension.isValid} id={detension.id} />
+          <InspectionValid isValid={deviation.isValid} id={deviation.id} />
         </CardContent>
         <CardFooter>
           Modellen som ble brukt er{" "}
           {(
             Math.max(
-              ...detension.findings
+              ...deviation.findings
                 .map((m) =>
-                  Object.values(m.detensions).map((item) => item.conf)
+                  Object.values(m.deviations).map((item) => item.conf)
                 )
                 .flat()
             ) * 100
@@ -189,4 +189,4 @@ const DetensionView = async ({
   );
 };
 
-export default DetensionView;
+export default deviationView;
