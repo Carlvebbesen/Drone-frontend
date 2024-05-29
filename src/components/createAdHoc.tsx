@@ -12,16 +12,17 @@ import {
 } from "@/components/ui/card";
 import { SelectForm } from "@/components/form/selectForm";
 import { DateForm } from "@/components/form/dateForm";
-import { MazeMapWrapper } from "@/components/maps/mazeMapWrapper";
+import { MapProps, MazeMapWrapper } from "@/components/maps/mazeMapWrapper";
 import { Button } from "./ui/button";
-import { useRouter } from "next/navigation";
 import { useMutationWithToast } from "@/hooks/useMutationWithToast";
 import { BuildingAreaFirebase } from "@/lib/dataTypes";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { useEffect, useState } from "react";
 
-const taskEnum = z.enum([
+import { createMission } from "@/lib/firebase/createData";
+
+export const taskEnum = z.enum([
   "Inspeksjon av Nødutgang/Rømmningsvei",
   "Inspeksjon av Støv",
   "Generell Rom",
@@ -38,8 +39,8 @@ const CreateInspection = ({
   }[];
 }) => {
   const { mutateWithToast } = useMutationWithToast();
-  const router = useRouter();
   const [areas, setAreas] = useState<BuildingAreaFirebase[]>([]);
+  const [generatedImage, setGeneratedImage] = useState<MapProps | null>(null);
   const fetchAreas = async () => {
     const buildingAreas = (
       await getDocs(collection(db, "buildingArea"))
@@ -51,6 +52,7 @@ const CreateInspection = ({
 
   useEffect(() => {
     fetchAreas();
+    console.log("fetching areas");
   }, []);
   const formSchema = z
     .object({
@@ -69,7 +71,9 @@ const CreateInspection = ({
       floor: "383",
     },
   });
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (generatedImage === null) return console.error("No image generated");
+    await createMission(generatedImage, values);
     mutateWithToast({
       mutatePromise: new Promise((resolve) =>
         setTimeout(() => {
@@ -88,7 +92,7 @@ const CreateInspection = ({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="grid grid-cols-1 gap-6"
+        className="grid grid-cols-2 gap-6"
       >
         <div>
           <h1 className="text-2xl font-bold my-6">Inspiser et område:</h1>
@@ -135,62 +139,64 @@ const CreateInspection = ({
             placeholder={"Velg dato"}
             desc={"Dette er når dronen vil utføre oppdraget"}
           />
+          <Card className="p-4 w-full mt-4">
+            <CardTitle>Send instruksjonene:</CardTitle>
+            <CardDescription>
+              Send avgårde informasjonen til dronen
+            </CardDescription>
+            <CardContent className="flex justify-center gap-10 items-center mt-5 flex-col">
+              <Button size={"lg"} type="submit">
+                Submit
+              </Button>
+              <div>
+                <h5 className="font-bold text-xl">Info:</h5>
+                <p className="text-md">
+                  Følgene kriterier følges mtp når på døgnet inspeksjonen
+                  utføres:
+                </p>
+                <ul>
+                  <li
+                    className="font-sem
+                    old text-gray-500 text-sm"
+                  >
+                    - Dronen er tilgjengelig
+                  </li>
+                  <li className="font-semibold text-gray-500 text-sm">
+                    - Dronen har batteri og ingen skader
+                  </li>
+                  <li className="font-semibold text-gray-500 text-sm">
+                    - Det er på en tid på døgnet hvor det er få mennesker
+                  </li>
+                  <li className="font-semibold text-gray-500 text-sm">
+                    - Det er lovlig tid å fly drone på
+                  </li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
         </div>
         <Card className="p-4">
           <CardTitle>Inspeksjonsområde for dronen:</CardTitle>
           <CardContent className="mt-8">
             <MazeMapWrapper
-              generateMap={(values) =>
-                console.log(values)
-              }
+              generateMap={(values) => {
+                if (values.mapArea !== generatedImage?.mapArea)
+                  setGeneratedImage((_) => values);
+              }}
               overlayTransparancy={1}
               zLevel={
                 floorNames.find(
                   (item) => item.id === parseInt(form.getValues("floor"))
                 )?.zLevel ?? 3
               }
-              className="h-[1000px] w-[1000px]"
+              className="h-[720px] w-[720px]"
               selectedArea={areas.find((item) => item.id === area)}
             />
           </CardContent>
         </Card>
-        <Card className="p-4 w-full md:col-start-2">
-          <CardTitle>Send instruksjonene:</CardTitle>
-          <CardDescription>
-            Send avgårde informasjonen til dronen
-          </CardDescription>
-          <CardContent className="flex justify-center gap-10 items-center mt-5 flex-col">
-            <Button size={"lg"} type="submit">
-              Submit
-            </Button>
-            <div>
-              <h5 className="font-bold text-xl">Info:</h5>
-              <p className="text-md">
-                Følgene kriterier følges mtp når på døgnet inspeksjonen utføres:
-              </p>
-              <ul>
-                <li
-                  className="font-sem
-                    old text-gray-500 text-sm"
-                >
-                  - Dronen er tilgjengelig
-                </li>
-                <li className="font-semibold text-gray-500 text-sm">
-                  - Dronen har batteri og ingen skader
-                </li>
-                <li className="font-semibold text-gray-500 text-sm">
-                  - Det er på en tid på døgnet hvor det er få mennesker
-                </li>
-                <li className="font-semibold text-gray-500 text-sm">
-                  - Det er lovlig tid å fly drone på
-                </li>
-              </ul>
-            </div>
-          </CardContent>
-        </Card>
       </form>
-      <canvas className="h-[1000px] w-[1000px]" id="canvasId">
-        Canvas not supported
+      <canvas className="h-[720px] w-[720px] hidden" id="canvasId">
+        Canvas for donwload locally
       </canvas>
     </Form>
   );

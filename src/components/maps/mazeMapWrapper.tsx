@@ -16,7 +16,7 @@ declare global {
   let Mazemap: any;
 }
 
-interface MapProps {
+export interface MapProps {
   pixelHeight: number;
   pixelWidth: number;
   viewWidthMeter: number;
@@ -31,6 +31,7 @@ interface MapProps {
 }
 interface MapWrapperProps {
   heatMap?: any;
+  donwloadOnChange?: boolean;
   generateMap?: (values: MapProps) => void;
   overlayTransparancy?: number;
   destroyOldDots?: boolean;
@@ -70,6 +71,7 @@ interface MapWrapperProps {
 export const MazeMapWrapper = ({
   onRoute,
   zoom = 19,
+  donwloadOnChange = false,
   generateMap,
   overlayTransparancy = 0.5,
   center = { lng: 10.405510225389492, lat: 63.41556139549505 },
@@ -355,6 +357,8 @@ export const MazeMapWrapper = ({
     }
   };
   const drawCanvas = () => {
+    console.log("ARWA::");
+    console.log(selectedArea?.name ?? "tom");
     const myCanva = myMapRef.current.getCanvas();
     let canvas = document.getElementById("canvasId");
     const width = myCanva.width;
@@ -383,11 +387,6 @@ export const MazeMapWrapper = ({
     const distanceHeight1 = turf.distance(cUL, cLL, options);
     //@ts-ignore
     const distanceHeight2 = turf.distance(cUR, cLR, options);
-    // console.log("width diff: ", distanceWidth1 - distanceWidth2);
-    // console.log("height diff: ", distanceHeight1 - distanceHeight2);
-    // console.log("Real Distance");
-    // console.log("height km", distanceHeight1);
-    console.log("width km", distanceWidth1);
     ctx.drawImage(myCanva, 0, 0);
     const editedImage = ctx.getImageData(0, 0, width, height);
     const data = editedImage.data;
@@ -424,23 +423,21 @@ export const MazeMapWrapper = ({
         viewHeightMeter: Math.max(distanceHeight1, distanceHeight2),
         viewWidthMeter: Math.max(distanceWidth1, distanceWidth2),
         //@ts-ignore
-        // imgUrl: canvasEdited?.toDataURL() ?? "",
-        imgUrl: "",
+        imgUrl: canvasEdited?.toDataURL() ?? "",
         resolution: Math.max(distanceWidth1, distanceWidth2) / width,
-        mapArea: selectedArea?.name ?? "rom",
+        mapArea: selectedArea?.name ? selectedArea.name : "rom",
       });
-    if (canvasEdited) {
+    if (donwloadOnChange && canvasEdited) {
       var link = document.createElement("a");
       link.download = `telloMap-${selectedArea?.name ?? "rom"}.png`;
       //@ts-ignore
       link.href = canvasEdited.toDataURL();
       link.click();
     } else {
-      console.log("Could not generate PNG");
+      console.log("Did not download locally");
     }
   };
   const onMapClick = async (e: any) => {
-    generateMap && drawCanvas();
     let zLevel = myMapRef.current.zLevel;
     showDots && updateClickedPos(e.lngLat, zLevel);
     if (showDots) {
@@ -541,6 +538,9 @@ export const MazeMapWrapper = ({
           }
         }
         myMapRef.current.fitBounds(bounds, { padding: 100 });
+        setTimeout(() => {
+          generateMap && drawCanvas();
+        }, 3000);
       }
       setLoading && setLoading(false);
     }

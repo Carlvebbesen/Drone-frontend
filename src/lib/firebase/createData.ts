@@ -1,7 +1,7 @@
 "use client";
 
 import { Geometry, MazemapPos, PoiPoint } from "@/components/maps/mapUtils";
-import { db } from "./config";
+import { db, fireStorageInstance } from "./config";
 import {
   doc,
   setDoc,
@@ -13,6 +13,9 @@ import {
 import { convertFromTrippleNestedListToObject } from "../utils";
 import { initBuildingFloors } from "../initBuilding";
 import { subDays } from "date-fns";
+import { taskEnum } from "@/components/createAdHoc";
+import { MapProps } from "@/components/maps/mazeMapWrapper";
+import { ref, uploadString } from "firebase/storage";
 
 export const createBuilding = async () => {
   await setDoc(doc(db, "Buildings", "Realfagsbygget"), {
@@ -24,7 +27,7 @@ export const createBuilding = async () => {
     //   coordinates: convertFromTrippleNestedListToObject(
     //     initBuilding.geometry.coordinates
     //   ).coordinates,
-    // },
+    // },∂
     campusId: 1,
     floorNames: initBuildingFloors.map((item) => {
       return {
@@ -48,6 +51,33 @@ export const createBuilding = async () => {
     }),
   });
   console.log("Created building");
+};
+function generateHash(stringObj: string) {
+  var hash = 0,
+    i,
+    chr;
+  if (stringObj.length === 0) return hash;
+  for (i = 0; i < stringObj.length; i++) {
+    chr = stringObj.charCodeAt(i);
+    hash = (hash << 5) - hash + chr;
+    hash |= 0; // Convert to 32bit integer
+  }
+  return hash;
+}
+
+export const createMission = async (
+  map: MapProps,
+  values: { type: any; date: Date; område: string; floor: string }
+) => {
+  const id = generateHash(JSON.stringify(map));
+  const storageRef = ref(fireStorageInstance, `map/${id}`);
+  await uploadString(storageRef, map.imgUrl, "data_url");
+  const docRef = await addDoc(collection(db, "Mission"), {
+    ...map,
+    imgUrl: `map/${id}`,
+    ...values,
+  }).catch((error) => console.error(error));
+  console.log("created mission");
 };
 
 export interface Drone {
